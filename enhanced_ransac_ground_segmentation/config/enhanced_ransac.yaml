@@ -1,0 +1,36 @@
+verbose: true
+timer: true
+visualization: true
+point_cloud_path: /media/m/C2E8-F63D/kitti-training-velodyne
+point_cloud_type: xyzi
+result_path: /enhanced_RANSAC_ground_segmentation/results
+buffer_size: 10
+voxel_size: 1
+max_iterations: 1000
+distance_threshold: 0.1
+max_height: 2.0
+max_angle: 5.0
+
+
+# box filter
+filter_box:
+  enable: true
+  xmin: -20.0
+  xmax: 20.0
+  ymin: -20.0
+  ymax: 20.0
+  zmin: -5.0
+  zmax: 5.0
+
+min_points: 10
+
+voxel_filter:
+  enable: true
+  # meter
+  voxel_size: 0.1
+
+noise_filter:
+  enable: true
+  mean_k: 50        # Number of nearest neighbors to analyze
+  std_dev: 1.0      # Standard deviation threshold
+  verbose: true     # Print debug information

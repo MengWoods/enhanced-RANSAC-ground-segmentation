@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as:"
+authors:
+  - family-names: "Woods"
+    given-names: "Menghao"
+title: "Enhanced RANSAC Ground Segmentation"
+version: "1.0.0"
+license: "MIT"
+repository-code: "https://github.com/MengWoods/enhanced-RANSAC-ground-segmentation"
+date-released: "2025-03-21"
+
+# orcd and doi
