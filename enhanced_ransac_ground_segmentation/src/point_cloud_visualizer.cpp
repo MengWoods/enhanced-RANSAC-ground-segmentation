@@ -46,5 +46,5 @@ void PointCloudVisualizer::updateVisualizer(const PointCloud::Ptr &cloud)
     }
 
     // Spin the viewer once to update the display (this is done in the loop)
-    viewer_->spinOnce(100);  // 100 milliseconds per loop iteration
+    viewer_->spinOnce(50);  // 100 milliseconds per loop iteration
 }

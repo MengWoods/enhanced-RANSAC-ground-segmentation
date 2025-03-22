@@ -55,6 +55,7 @@
         "filesystem": "cpp",
         "future": "cpp",
         "thread": "cpp",
-        "condition_variable": "cpp"
+        "condition_variable": "cpp",
+        "complex": "cpp"
     }
 }

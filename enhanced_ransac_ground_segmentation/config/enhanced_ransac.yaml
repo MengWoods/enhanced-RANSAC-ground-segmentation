@@ -1,28 +1,23 @@
 verbose: true
 timer: true
 visualization: true
-point_cloud_path: /media/m/C2E8-F63D/kitti-training-velodyne
+point_cloud_path: /media/m/One Touch/WorkStation/Kitti/2011_09_26_drive_0061_sync/2011_09_26/2011_09_26_drive_0061_sync/velodyne_points/data
 point_cloud_type: xyzi
 result_path: /enhanced_RANSAC_ground_segmentation/results
-buffer_size: 10
 voxel_size: 1
 max_iterations: 1000
 distance_threshold: 0.1
-max_height: 2.0
-max_angle: 5.0
 
 
 # box filter
 filter_box:
   enable: true
-  xmin: -20.0
-  xmax: 20.0
-  ymin: -20.0
-  ymax: 20.0
+  xmin: -10.0
+  xmax: 10.0
+  ymin: -10.0
+  ymax: 10.0
   zmin: -5.0
   zmax: 5.0
-
-min_points: 10
 
 voxel_filter:
   enable: true
@@ -34,3 +29,22 @@ noise_filter:
   mean_k: 50        # Number of nearest neighbors to analyze
   std_dev: 1.0      # Standard deviation threshold
   verbose: true     # Print debug information
+
+
+ransac:
+  distance_threshold: 0.2  # Maximum distance for a point to be considered in the plane
+  max_iterations: 100      # Maximum number of RANSAC iterations
+  min_points: 50           # Minimum number of points required for a valid plane
+  timer: true
+
+ground_estimation:
+  buffer_size: 10
+  max_angle: 10.0  # degrees
+  max_height: 0.2  # meters
+  min_points: 50           # Minimum number of points required for a valid plane
+  wall_filter:
+    enable: true              # Enable or disable the wall filter
+    max_rerun_times: 3        # Maximum number of times to rerun the filter if needed.
+    threshold: 0.2            # Distance threshold (in meters) for filtering out points near the wall.
+    angle_threshold: 30       # Angle threshold (in degrees) to determine if the detected plane is a wall.
+                              # If the normal angle of the detected plane exceeds this threshold, it will be treated as a wall.

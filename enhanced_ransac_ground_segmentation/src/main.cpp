@@ -11,6 +11,7 @@
 #include "box_filter.h"
 #include "voxel_filter.h"
 #include "noise_filter.h"
+#include "ground_estimation.h"
 
 int main(int argc, char** argv) 
 {
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
     PointCloudVisualizer visualizer;
     BoxFilter box_filter(config);
     VoxelFilter voxel_filter(config);
+    GroundEstimation ground_estimator(config);
     // Create NoiseFilter instance
     NoiseFilter noise_filter(config);
 
@@ -45,12 +47,15 @@ int main(int argc, char** argv)
     }
 
     PointCloudPtr cloud(new PointCloud());
+    std::vector<float> ground_plane;
+    
 
     while (loader.loadNextPointCloud(cloud)) 
     {
         // Create a copy of the point cloud for visualization
         PointCloudPtr cloud_copy(new pcl::PointCloud<pcl::PointXYZI>());
         pcl::copyPointCloud(*cloud, *cloud_copy); // Copy data from loaded cloud to the copy
+        // std::cout << "test" << std::endl;
 
         // Filters
         // Apply the filter (in-place modification)
@@ -58,13 +63,18 @@ int main(int argc, char** argv)
         voxel_filter.applyFilter(cloud);
         noise_filter.applyFilter(cloud);
 
-        // Ransac
+        // ground estimation:  Ransac, wall filter, moving average, or kalman filter
+        ground_estimator.estimateGround(cloud, ground_plane);
+
+        std::cout << "Estimated ground plane: " << ground_plane[0] << "x + "
+              << ground_plane[1] << "y + " << ground_plane[2] << "z + "
+              << ground_plane[3] << " = 0" << std::endl;
 
         // Visualize the point cloud if visualization is enabled
         if (visualization && cloud->size() > 0)
         {
             // Update the visualizer with the current point cloud
-            visualizer.updateVisualizer(cloud);
+            visualizer.updateVisualizer(cloud_copy);
         }
     }
 
