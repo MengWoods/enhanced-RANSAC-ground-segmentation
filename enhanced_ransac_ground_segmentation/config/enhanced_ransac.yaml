@@ -1,13 +1,12 @@
 verbose: true
 timer: true
 visualization: true
-point_cloud_path: /media/m/One Touch/WorkStation/Kitti/2011_09_26_drive_0061_sync/2011_09_26/2011_09_26_drive_0061_sync/velodyne_points/data
+point_cloud_path: /media/m/Downloads/kitti/2011_09_26_drive_0061_sync/2011_09_26/2011_09_26_drive_0061_sync/velodyne_points/data
 point_cloud_type: xyzi
 result_path: /enhanced_RANSAC_ground_segmentation/results
 voxel_size: 1
 max_iterations: 1000
 distance_threshold: 0.1
-
 
 # box filter
 filter_box:
@@ -29,7 +28,6 @@ noise_filter:
   mean_k: 50        # Number of nearest neighbors to analyze
   std_dev: 1.0      # Standard deviation threshold
   verbose: true     # Print debug information
-
 
 ransac:
   distance_threshold: 0.2  # Maximum distance for a point to be considered in the plane
