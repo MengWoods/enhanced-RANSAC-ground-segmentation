@@ -13,6 +13,8 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
     : ransac_(std::make_unique<Ransac>(config)),
       wall_filter_(std::make_unique<WallFilter>(config["ground_estimation"]["wall_filter"]["threshold"].as<float>(0.2f)))
 {
+    // Load parameters from config
+    enable_ = config["ground_estimation"]["enable"].as<bool>(true);
     buffer_size_ = config["ground_estimation"]["buffer_size"].as<int>(10);
     max_angle_ = config["ground_estimation"]["max_angle"].as<float>(10.0f);
     max_height_ = config["ground_estimation"]["max_height"].as<float>(0.2f);
@@ -32,6 +34,11 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
 
 bool GroundEstimation::estimateGround(PointCloudPtr &cloud, std::vector<float> &plane_coeffs)
 {
+    if (!enable_)
+    {
+        std::cerr << "\t[GroundEstimation] Ground estimation is disabled." << std::endl;
+        return false;
+    }
     if (cloud->size() < min_points_)
     {
         if (!getAverageFromBuffer(plane_coeffs))

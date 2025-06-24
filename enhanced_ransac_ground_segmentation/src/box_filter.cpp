@@ -9,13 +9,13 @@
 BoxFilter::BoxFilter(const YAML::Node& config)
 {
     // Load configuration parameters from YAML
-    enable_ = config["filter_box"]["enable"].as<bool>(false);
-    xmin_ = config["filter_box"]["xmin"].as<float>(-20.0);
-    xmax_ = config["filter_box"]["xmax"].as<float>(20.0);
-    ymin_ = config["filter_box"]["ymin"].as<float>(-20.0);
-    ymax_ = config["filter_box"]["ymax"].as<float>(20.0);
-    zmin_ = config["filter_box"]["zmin"].as<float>(-5.0);
-    zmax_ = config["filter_box"]["zmax"].as<float>(5.0);
+    enable_ = config["box_filter"]["enable"].as<bool>(false);
+    xmin_ = config["box_filter"]["xmin"].as<float>(-20.0);
+    xmax_ = config["box_filter"]["xmax"].as<float>(20.0);
+    ymin_ = config["box_filter"]["ymin"].as<float>(-20.0);
+    ymax_ = config["box_filter"]["ymax"].as<float>(20.0);
+    zmin_ = config["box_filter"]["zmin"].as<float>(-5.0);
+    zmax_ = config["box_filter"]["zmax"].as<float>(5.0);
     verbose_ = config["verbose"].as<bool>(false);
 
     if (enable_)

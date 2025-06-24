@@ -1,7 +1,16 @@
 #include "point_cloud_visualizer.h"
 
-PointCloudVisualizer::PointCloudVisualizer()
+PointCloudVisualizer::PointCloudVisualizer(const YAML::Node &config)
 {
+    // Initialize the PCL visualizer with the configuration settings
+    camera_distance_ = config["point_cloud_visualizer"]["camera_distance"].as<float>(25.0f);
+    angle_ = config["point_cloud_visualizer"]["angle"].as<float>(160.0f);
+    refresh_interval_ = config["point_cloud_visualizer"]["refresh_interval"].as<int>(10);
+
+    // Log the initialization parameters
+    std::cout << "[PointCloudVisualizer] Initialized with camera_distance: " << camera_distance_
+              << ", angle: " << angle_ << ", refresh_interval: " << refresh_interval_ << " ms" << std::endl;
+
     viewer_ = pcl::visualization::PCLVisualizer::Ptr(new pcl::visualization::PCLVisualizer("PointCloud Viewer"));
 }
 
@@ -21,8 +30,8 @@ void PointCloudVisualizer::initVisualizer()
     viewer_->initCameraParameters(); // Initialize camera parameters for the viewer
 
     // Set the camera distance from the origin (adjust as necessary)
-    float camera_distance = 25.0f;  // Distance from the origin (camera to object)
-    float angle = 160.0f;           // Camera rotation angle in degrees around y-axis (horizontal rotation)
+    float camera_distance = camera_distance_;
+    float angle = angle_;
 
     // Calculate the camera position based on rotation around the y-axis
     float x_position = camera_distance * cos(angle * M_PI / 180.0f);  // x position after rotation
@@ -46,5 +55,5 @@ void PointCloudVisualizer::updateVisualizer(const PointCloud::Ptr &cloud)
     }
 
     // Spin the viewer once to update the display (this is done in the loop)
-    viewer_->spinOnce(50);  // 100 milliseconds per loop iteration
+    viewer_->spinOnce(refresh_interval_);
 }

@@ -1,33 +1,42 @@
 verbose: true
 timer: true
-visualization: true
-point_cloud_path: /home/mh/Documents/kitti/data_object_velodyne/testing/velodyne
-point_cloud_type: xyzi
 result_path: ~/Documents/github/enhanced_RANSAC_ground_segmentation/results
-voxel_size: 1
-max_iterations: 1000
 distance_threshold: 0.1
 
+point_cloud_loader:
+  verbose: false  # Print debug information
+  point_cloud_paths:
+    - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
+    - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
+    - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
+  point_cloud_type: xyzi  # Options: xyzi, xyz, xyi, xyzrgb
+
+
 # box filter
-filter_box:
+box_filter:
   enable: true
-  xmin: -10.0
+  xmin: -2.0
   xmax: 10.0
   ymin: -10.0
   ymax: 10.0
   zmin: -5.0
-  zmax: 5.0
+  zmax: 8.0
 
 voxel_filter:
   enable: true
-  # meter
   voxel_size: 0.1
 
 noise_filter:
-  enable: true
+  enable: false      # Enable or disable noise filtering
   mean_k: 50        # Number of nearest neighbors to analyze
   std_dev: 1.0      # Standard deviation threshold
   verbose: true     # Print debug information
+
+point_cloud_visualizer:
+  enable: true          # Enable or disable point cloud visualization
+  camera_distance: 25   # Distance from the origin (camera to object)
+  angle: 160.0          # Camera rotation angle in degrees around y-axis (horizontal rotation)
+  refresh_interval: 50  # Time interval in ms for refreshing the visualization
 
 ransac:
   distance_threshold: 0.2  # Maximum distance for a point to be considered in the plane
@@ -36,6 +45,7 @@ ransac:
   timer: true
 
 ground_estimation:
+  enable: false
   buffer_size: 10
   max_angle: 10.0  # degrees
   max_height: 0.2  # meters
