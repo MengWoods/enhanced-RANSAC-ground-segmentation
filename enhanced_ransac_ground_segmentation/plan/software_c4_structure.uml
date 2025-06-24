@@ -1,0 +1,120 @@
+@startuml
+
+
+legend right
+Layered architecture:
+- L1 (Coral): Application Layer. Top-level system entry point.
+- L2 (Blue): Domain Layer. Project-specific core functional logic.
+- L3 (Yellow): Support Layer. Project-agnostic processing functions.
+- L4 (Gray): Core Utilities. Low-level generic, reusable helpers.
+end legend
+
+package "enhanced_ransac_ground_segmentation" {
+
+
+' Level 1: Application Layer
+
+    ' Main entry point for the whole application.
+    ' Achieve the function by calling GroundEstimation and domain layer packages.
+    package "main" #LightCoral {
+        class Main {
+            <Entry Point>
+            - main()
+        }
+    }
+
+    ' Major application entry node
+    package "ground_estimation" #LightCoral {
+        class GroundEstimation {
+            + estimateGround()
+            - getAverageFromBuffer()
+            - saveToBuffer()
+            - isGroundValid
+            - isWallLike
+            - flipPlaneIfNecessary
+        }
+    }
+
+' Level 2: Domain Layer
+
+    package "box_filter" #LightBlue {
+        class BxoFilter {
+            + applyFilter()
+        }
+    }
+
+    package "noise_filter" #LightBlue {
+        class NoiseFilter {
+            + applyFilter()
+        }
+    }
+
+    package "voxel_filter" #LightBlue {
+        class NoiseFilter {
+            + applyFilter()
+        }
+    }
+
+    package "wall_filter" #LightBlue {
+        class WallFilter {
+            + applyFilter()
+        }
+    }
+
+    package "ransac" #LightBlue {
+        class Ransac {
+            + estimatePlane()
+        }
+    }
+
+' Level 3: Support Layer
+
+
+    package "point_cloud_loader" #LightYellow {
+        class PointCloudLoader {
+            + loadNextPointCloud()
+            - loadFileList()
+            - loadBinFile()
+        }
+    }
+
+    package "point_cloud_visualizer" #LightYellow {
+        class PointCloudVisualizer {
+            + initVisualizer()
+            + updateVisualizer()
+        }
+    }
+
+
+' Level 4: Core Utilities
+
+
+    package "constant" #LightGray {
+        class Constant {
+        }
+    }
+
+}
+
+main --> ground_estimation
+
+ground_estimation --> point_cloud_loader
+ground_estimation --> ransac
+ground_estimation --> wall_filter
+ground_estimation --> voxel_filter
+ground_estimation --> noise_filter
+ground_estimation --> box_filter
+ground_estimation --> point_cloud_visualizer
+
+wall_filter --> constant
+ransac --> constant
+point_cloud_loader --> constant
+voxel_filter --> constant
+noise_filter --> constant
+box_filter --> constant
+point_cloud_visualizer --> constant
+
+
+
+
+@enduml

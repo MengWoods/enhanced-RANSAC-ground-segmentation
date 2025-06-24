@@ -1,9 +1,9 @@
 verbose: true
 timer: true
 visualization: true
-point_cloud_path: /media/m/Downloads/kitti/2011_09_26_drive_0061_sync/2011_09_26/2011_09_26_drive_0061_sync/velodyne_points/data
+point_cloud_path: /home/mh/Documents/kitti/data_object_velodyne/testing/velodyne
 point_cloud_type: xyzi
-result_path: /enhanced_RANSAC_ground_segmentation/results
+result_path: ~/Documents/github/enhanced_RANSAC_ground_segmentation/results
 voxel_size: 1
 max_iterations: 1000
 distance_threshold: 0.1
