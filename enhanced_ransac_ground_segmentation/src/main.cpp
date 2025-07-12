@@ -13,9 +13,9 @@
 #include "noise_filter.h"
 #include "ground_estimation.h"
 
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
-    if (argc < 2) 
+    if (argc < 2)
     {
         std::cerr << "Usage: " << argv[0] << " <config_path>" << std::endl;
         return 1;
@@ -25,16 +25,16 @@ int main(int argc, char** argv)
     // Load configuration
     YAML::Node config = YAML::LoadFile(config_path);
     bool verbose = config["verbose"].as<bool>(false);
-    bool visualization = config["visualization"].as<bool>(true);
-    std::string point_cloud_path = config["point_cloud_path"].as<std::string>("");
+    bool visualization = config["point_cloud_visualizer"]["enable"].as<bool>(true);
+    std::string point_cloud_path = config["point_cloud_path"].as<std::string>("/path/to/point_cloud.pcd");
 
     // Logs
     std::cout << "Verbose: " << (verbose ? "true" : "false") << std::endl;
     std::cout << "visualization: " << (visualization ? "true" : "false") << std::endl;
 
-    // Instantiate 
+    // Instantiate
     PointCloudLoader loader(config);
-    PointCloudVisualizer visualizer;
+    PointCloudVisualizer visualizer(config);
     BoxFilter box_filter(config);
     VoxelFilter voxel_filter(config);
     GroundEstimation ground_estimator(config);
@@ -48,9 +48,9 @@ int main(int argc, char** argv)
 
     PointCloudPtr cloud(new PointCloud());
     std::vector<float> ground_plane;
-    
 
-    while (loader.loadNextPointCloud(cloud)) 
+
+    while (loader.loadNextPointCloud(cloud))
     {
         // Create a copy of the point cloud for visualization
         PointCloudPtr cloud_copy(new pcl::PointCloud<pcl::PointXYZI>());

@@ -9,13 +9,14 @@
 
 #include <pcl/visualization/pcl_visualizer.h>
 
-class PointCloudVisualizer 
+class PointCloudVisualizer
 {
 public:
     /**
      * @brief Default constructor initializes the PCL visualizer.
+     * @param config YAML configuration node containing visualizer settings.
      */
-    PointCloudVisualizer();
+    PointCloudVisualizer(const YAML::Node &config);
 
     /**
      * @brief Destructor that ensures visualizer resources are released.
@@ -36,4 +37,7 @@ public:
 
 private:
     pcl::visualization::PCLVisualizer::Ptr viewer_; ///< PCL visualizer instance
+    float camera_distance_;                         ///< Distance from the origin (camera to object)
+    float angle_;                                   ///< Camera rotation angle in degrees around y-axis (horizontal rotation)
+    int refresh_interval_;                          ///< Time interval in ms for refreshing the visualization
 };

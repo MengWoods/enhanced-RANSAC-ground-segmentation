@@ -23,8 +23,14 @@ voxel_filter:
   # meter
   voxel_size: 0.1
 
+point_cloud_visualizer:
+  enable: true          # Enable or disable point cloud visualization
+  camera_distance: 25   # Distance from the origin (camera to object)
+  angle: 160.0          # Camera rotation angle in degrees around y-axis (horizontal rotation)
+  refresh_interval: 10  # Time interval in ms for refreshing the visualization
+
 noise_filter:
-  enable: true
+  enable: true      # Enable or disable noise filtering
   mean_k: 50        # Number of nearest neighbors to analyze
   std_dev: 1.0      # Standard deviation threshold
   verbose: true     # Print debug information
