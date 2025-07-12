@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 
-#include "noise_filter.h"
+#include "filter/noise_filter.h"
 
 NoiseFilter::NoiseFilter(const YAML::Node &config)
 {

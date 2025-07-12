@@ -4,7 +4,7 @@
  *
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
-#include "point_cloud_loader.h"
+#include "io/point_cloud_loader.h"
 
 PointCloudLoader::PointCloudLoader(const YAML::Node &config)
 {

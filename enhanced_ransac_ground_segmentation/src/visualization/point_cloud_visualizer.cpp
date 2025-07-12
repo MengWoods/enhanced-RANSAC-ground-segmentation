@@ -1,4 +1,4 @@
-#include "point_cloud_visualizer.h"
+#include "visualization/point_cloud_visualizer.h"
 
 PointCloudVisualizer::PointCloudVisualizer(const YAML::Node &config)
 {

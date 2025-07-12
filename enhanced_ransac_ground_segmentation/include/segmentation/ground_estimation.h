@@ -5,10 +5,12 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 #pragma once
-#include "constant.h"
+#include "common/constant.h"
 
 #include "ransac.h"
-#include "wall_filter.h"
+
+#include "filter/wall_filter.h"
+
 #include <memory>
 #include <deque>
 #include <Eigen/Dense>
@@ -25,7 +27,7 @@ public:
      * @param config YAML node containing configuration parameters.
      */
     explicit GroundEstimation(const YAML::Node &config);
-    
+
     /**
      * @brief Estimates the ground plane from the input cloud.
      * @param cloud Input point cloud.
@@ -41,27 +43,27 @@ private:
      * @return True if buffer has data, false otherwise.
      */
     bool getAverageFromBuffer(std::vector<float> &plane_coeffs);
-    
+
     /**
      * @brief Saves the estimated ground plane to the buffer.
      * @param plane_coeffs Plane coefficients to store.
      */
     void saveToBuffer(const std::vector<float> &plane_coeffs);
-    
+
     /**
      * @brief Checks if the estimated ground plane meets validity conditions.
      * @param plane_coeffs Plane coefficients to check.
      * @return True if valid, false otherwise.
      */
     bool isGroundValid(const std::vector<float> &plane_coeffs) const;
-    
+
     /**
      * @brief Determines if the detected plane resembles a wall.
      * @param plane_coeffs Plane coefficients to check.
      * @return True if it resembles a wall, false otherwise.
      */
     bool isWallLike(const std::vector<float> &plane_coeffs) const;
-    
+
     /**
      * @brief Ensures the ground plane normal points upwards.
      * @param plane_coeffs Plane coefficients to adjust if necessary.

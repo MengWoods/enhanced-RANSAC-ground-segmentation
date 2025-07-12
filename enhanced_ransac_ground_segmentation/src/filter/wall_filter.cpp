@@ -4,7 +4,8 @@
  *
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
-#include "wall_filter.h"
+#include "filter/wall_filter.h"
+
 #include <cmath>
 
 WallFilter::WallFilter(float threshold)

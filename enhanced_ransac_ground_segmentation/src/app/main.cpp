@@ -5,13 +5,17 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 
-#include "constant.h"
-#include "point_cloud_loader.h"
-#include "point_cloud_visualizer.h"
-#include "box_filter.h"
-#include "voxel_filter.h"
-#include "noise_filter.h"
-#include "ground_estimation.h"
+#include "common/constant.h"
+
+#include "io/point_cloud_loader.h"
+
+#include "visualization/point_cloud_visualizer.h"
+
+#include "filter/box_filter.h"
+#include "filter/voxel_filter.h"
+#include "filter/noise_filter.h"
+
+#include "segmentation/ground_estimation.h"
 
 int main(int argc, char** argv)
 {

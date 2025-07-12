@@ -4,7 +4,8 @@
  *
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
-#include "ground_estimation.h"
+#include "segmentation/ground_estimation.h"
+
 #include <iostream>
 #include <Eigen/Dense>
 #include <cmath>

@@ -10,8 +10,10 @@
 #include <string>
 #include <fstream>
 #include <yaml-cpp/yaml.h>
+
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+
 #include <filesystem>
 
 namespace fs = std::filesystem;

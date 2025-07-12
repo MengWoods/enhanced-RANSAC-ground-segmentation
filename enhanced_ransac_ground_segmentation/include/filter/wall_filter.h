@@ -5,13 +5,13 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 #pragma once
-#include "constant.h"
+#include "common/constant.h"
 
 /**
  * @class WallFilter
  * @brief Filters vertical planes (walls) from a point cloud based on plane coefficients.
  */
-class WallFilter 
+class WallFilter
 {
 public:
     /**

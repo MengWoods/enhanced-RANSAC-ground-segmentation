@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 #pragma once
-#include "constant.h"
+#include "common/constant.h"
 
 #include <pcl/filters/voxel_grid.h>
 
@@ -14,7 +14,7 @@
  * @class VoxelFilter
  * @brief A class for downsampling point clouds using a voxel grid filter.
  *
- * This class applies a voxel grid filter to reduce the number of points in a 
+ * This class applies a voxel grid filter to reduce the number of points in a
  * point cloud while preserving its structure. The voxel size is configurable via YAML.
  */
 class VoxelFilter

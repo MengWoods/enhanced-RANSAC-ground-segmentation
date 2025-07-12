@@ -4,7 +4,7 @@
  *
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
-#include "voxel_filter.h"
+#include "filter/voxel_filter.h"
 
 VoxelFilter::VoxelFilter(const YAML::Node &config)
 {

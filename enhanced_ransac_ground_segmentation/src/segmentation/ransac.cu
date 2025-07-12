@@ -6,8 +6,10 @@
  */
 #include <cuda_runtime.h>
 #include <curand_kernel.h>
+
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+
 #include <cmath>
 
 #define THREADS_PER_BLOCK 256
@@ -19,10 +21,10 @@ using PointCloudPtr = pcl::PointCloud<pcl::PointXYZI>::Ptr;
 /**
  * @brief Kernel to compute RANSAC plane fitting.
  */
-__global__ void ransacKernel(const Point *points, int num_points, int max_iterations, 
+__global__ void ransacKernel(const Point *points, int num_points, int max_iterations,
                              float distance_threshold, float *best_plane)
 {
-    __shared__ float best_model[4]; 
+    __shared__ float best_model[4];
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Random seed
@@ -93,7 +95,7 @@ __global__ void ransacKernel(const Point *points, int num_points, int max_iterat
 /**
  * @brief Wrapper function to launch CUDA kernel.
  */
-void ransacFitPlaneGPU(const Point *d_points, int num_points, int max_iterations, 
+void ransacFitPlaneGPU(const Point *d_points, int num_points, int max_iterations,
                        float distance_threshold, float *d_plane_coeffs)
 {
     int num_blocks = (num_points + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;

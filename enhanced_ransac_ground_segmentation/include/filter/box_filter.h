@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 #pragma once
-#include "constant.h"
+#include "common/constant.h"
 
 #include <pcl/filters/crop_box.h>
 
@@ -19,7 +19,7 @@ class BoxFilter
 public:
     /**
      * @brief Constructs a BoxFilter object with the given YAML configuration.
-     * 
+     *
      * @param config YAML node containing filter configuration parameters.
      */
     BoxFilter(const YAML::Node& config);

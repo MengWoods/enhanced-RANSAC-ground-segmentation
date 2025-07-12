@@ -4,11 +4,12 @@
  *
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
-#include "ransac.h"
+#include "segmentation/ransac.h"
+
 #include <cuda_runtime.h>
 
 // CUDA function declaration
-void ransacFitPlaneGPU(const Point *d_points, int num_points, int max_iterations, 
+extern void ransacFitPlaneGPU(const Point *d_points, int num_points, int max_iterations,
                        float distance_threshold, float *d_plane_coeffs);
 
 Ransac::Ransac(const YAML::Node &config)

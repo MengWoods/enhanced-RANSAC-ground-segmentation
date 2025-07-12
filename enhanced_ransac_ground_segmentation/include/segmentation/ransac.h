@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 #pragma once
-#include "constant.h"
+#include "common/constant.h"
 
 /**
  * @brief GPU-based RANSAC plane fitting.
