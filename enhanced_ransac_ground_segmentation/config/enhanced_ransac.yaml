@@ -1,7 +1,6 @@
 verbose: true
 timer: true
 result_path: ~/Documents/github/enhanced_RANSAC_ground_segmentation/results
-distance_threshold: 0.1
 
 point_cloud_loader:
   verbose: false  # Print debug information
@@ -11,25 +10,23 @@ point_cloud_loader:
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
   point_cloud_type: xyzi  # Options: xyzi, xyz, xyi, xyzrgb
 
-
-# box filter
 box_filter:
   enable: true
-  xmin: -2.0
-  xmax: 10.0
-  ymin: -10.0
-  ymax: 10.0
+  xmin: -8.0
+  xmax: 8.0
+  ymin: -8.0
+  ymax: 8.0
   zmin: -5.0
   zmax: 8.0
 
 voxel_filter:
   enable: true
-  voxel_size: 0.1
+  voxel_size: 0.15
 
 noise_filter:
   enable: false      # Enable or disable noise filtering
-  mean_k: 50        # Number of nearest neighbors to analyze
-  std_dev: 1.0      # Standard deviation threshold
+  mean_k: 10        # Number of nearest neighbors to analyze
+  std_dev: 2.0      # Standard deviation threshold
   verbose: true     # Print debug information
 
 point_cloud_visualizer:
@@ -40,18 +37,20 @@ point_cloud_visualizer:
 
 ransac:
   distance_threshold: 0.2  # Maximum distance for a point to be considered in the plane
-  max_iterations: 100      # Maximum number of RANSAC iterations
-  min_points: 50           # Minimum number of points required for a valid plane
+  max_iterations: 30      # Maximum number of RANSAC iterations
+  min_points: 20           # Minimum number of points required for a valid plane
   timer: true
 
 ground_estimation:
+  verbose: true
   enable: false
-  buffer_size: 10
-  max_angle: 10.0  # degrees
-  max_height: 0.2  # meters
-  min_points: 50           # Minimum number of points required for a valid plane
+  buffer_size: 80
+  max_angle: 20.0  # Degrees angle between plane's normal and the Z-axis.
+  max_height: 2  # Meters
+  min_points: 30           # Minimum number of points required for a valid plane
+  z_offset: 0.3  # Offset to adjust the ground plane height
   wall_filter:
-    enable: true              # Enable or disable the wall filter
+    enable: false              # Enable or disable the wall filter
     max_rerun_times: 3        # Maximum number of times to rerun the filter if needed.
     threshold: 0.2            # Distance threshold (in meters) for filtering out points near the wall.
     angle_threshold: 30       # Angle threshold (in degrees) to determine if the detected plane is a wall.

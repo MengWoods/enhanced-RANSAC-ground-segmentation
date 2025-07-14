@@ -44,6 +44,50 @@ void PointCloudVisualizer::initVisualizer()
                                1.0, 0.0, 0.0);                  // Up direction along the x-axis
 }
 
+void PointCloudVisualizer::updateVisualizer(
+    const PointCloud::Ptr &cloud, const std::vector<float> &ground_plane)
+{
+    // If no valid plane, fallback to single cloud visualization
+    if (ground_plane.size() != 4)
+    {
+        if (!viewer_->updatePointCloud<Point>(cloud, "cloud"))
+        {
+            viewer_->addPointCloud<Point>(cloud, "cloud");
+            viewer_->setPointCloudRenderingProperties(
+                pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud");
+        }
+
+        viewer_->spinOnce(refresh_interval_);
+        return;
+    }
+
+    // Use helper function to split cloud
+    auto [above_cloud, below_cloud] = splitCloudByPlane(cloud, ground_plane);
+
+    // Visualize points above the plane (white)
+    if (!viewer_->updatePointCloud<Point>(above_cloud, "above_cloud"))
+    {
+        viewer_->addPointCloud<Point>(above_cloud, "above_cloud");
+        viewer_->setPointCloudRenderingProperties(
+            pcl::visualization::PCL_VISUALIZER_COLOR, 1.0, 1.0, 1.0, "above_cloud");
+        viewer_->setPointCloudRenderingProperties(
+            pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "above_cloud");
+    }
+
+    // Visualize points on/below the plane (green)
+    if (!viewer_->updatePointCloud<Point>(below_cloud, "below_cloud"))
+    {
+        viewer_->addPointCloud<Point>(below_cloud, "below_cloud");
+        viewer_->setPointCloudRenderingProperties(
+            pcl::visualization::PCL_VISUALIZER_COLOR, 0.0, 1.0, 0.0, "below_cloud");
+        viewer_->setPointCloudRenderingProperties(
+            pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "below_cloud");
+    }
+
+    viewer_->spinOnce(refresh_interval_);
+}
+
+
 void PointCloudVisualizer::updateVisualizer(const PointCloud::Ptr &cloud)
 {
     // If the point cloud is already added, update it
@@ -56,4 +100,32 @@ void PointCloudVisualizer::updateVisualizer(const PointCloud::Ptr &cloud)
 
     // Spin the viewer once to update the display (this is done in the loop)
     viewer_->spinOnce(refresh_interval_);
+}
+
+std::pair<PointCloud::Ptr, PointCloud::Ptr> PointCloudVisualizer::splitCloudByPlane(
+    const PointCloud::Ptr& cloud, const std::vector<float>& plane_coeffs, float threshold)
+{
+    PointCloud::Ptr above(new PointCloud);
+    PointCloud::Ptr below(new PointCloud);
+
+    float a = plane_coeffs[0];
+    float b = plane_coeffs[1];
+    float c = plane_coeffs[2];
+    float d = plane_coeffs[3];
+
+    for (const auto& point : cloud->points)
+    {
+        float distance = a * point.x + b * point.y + c * point.z + d;
+        if (distance > threshold)
+            above->points.push_back(point);
+        else
+            below->points.push_back(point);
+    }
+
+    above->width = static_cast<uint32_t>(above->points.size());
+    below->width = static_cast<uint32_t>(below->points.size());
+    above->height = below->height = 1;
+    above->is_dense = below->is_dense = true;
+
+    return {above, below};
 }

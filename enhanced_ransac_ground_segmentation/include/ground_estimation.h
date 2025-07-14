@@ -74,6 +74,7 @@ private:
     float max_angle_;   ///< Maximum allowable ground plane angle.
     float max_height_;  ///< Maximum allowable ground plane height.
     int min_points_;    ///< Minimum number of points required for estimation.
+    float z_offset_;    ///< Offset to adjust the ground plane height, useful for fine-tuning.
     bool wall_filter_enabled_;  ///< Flag indicating if wall filtering is enabled.
     int max_rerun_times_;       ///< Maximum number of RANSAC retries for wall filtering.
     float wall_threshold_;      ///< Threshold for determining if a plane resembles a wall.

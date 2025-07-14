@@ -6,14 +6,17 @@
  */
 
 #include "constant.h"
+
+#include <chrono>
+
 #include "point_cloud_loader.h"
 #include "point_cloud_visualizer.h"
+
 #include "box_filter.h"
 #include "voxel_filter.h"
 #include "noise_filter.h"
-#include "ground_estimation.h"
 
-#include <chrono>
+#include "ground_estimation.h"
 
 
 int main(int argc, char** argv)
@@ -30,32 +33,32 @@ int main(int argc, char** argv)
     bool verbose = config["verbose"].as<bool>(false);
     bool timer = config["timer"].as<bool>(false);
     bool visualization = config["point_cloud_visualizer"]["enable"].as<bool>(true);
-    std::string point_cloud_path = config["point_cloud_path"].as<std::string>("/path/to/point_cloud.pcd");
+    bool ground_estimation = config["ground_estimation"]["enable"].as<bool>(true);
 
     // Logs
     std::cout << "Verbose: " << (verbose ? "true" : "false") << std::endl;
-
+    std::cout << "Timer: " << (timer ? "true" : "false") << std::endl;
     std::cout << "visualization: " << (visualization ? "true" : "false") << std::endl;
+    std::cout << "ground_estimation: " << (ground_estimation ? "true" : "false") << std::endl;
 
-    // Instantiate
-    PointCloudLoader loader(config);
-    PointCloudVisualizer visualizer(config);
+    // Initialize components
+    PointCloudLoader point_cloud_loader(config);
+    PointCloudVisualizer point_cloud_visualizer(config);
     BoxFilter box_filter(config);
     VoxelFilter voxel_filter(config);
     GroundEstimation ground_estimator(config);
-    // Create NoiseFilter instance
     NoiseFilter noise_filter(config);
 
     if (visualization)
     {
-        visualizer.initVisualizer();
+        point_cloud_visualizer.initVisualizer();
     }
 
     PointCloudPtr cloud(new PointCloud());
     std::vector<float> ground_plane;
 
 
-    while (loader.loadNextPointCloud(cloud))
+    while (point_cloud_loader.loadNextPointCloud(cloud))
     {
         // Init
         auto frame_start = std::chrono::steady_clock::now();
@@ -64,7 +67,6 @@ int main(int argc, char** argv)
         // Create a copy of the point cloud for visualization
         PointCloudPtr cloud_copy(new pcl::PointCloud<pcl::PointXYZI>());
         pcl::copyPointCloud(*cloud, *cloud_copy); // Copy data from loaded cloud to the copy
-        // std::cout << "test" << std::endl;
 
         // Filters
         // Apply the filter (in-place modification)
@@ -100,8 +102,8 @@ int main(int argc, char** argv)
         }
 
         // ground estimation:  Ransac, wall filter, moving average, or kalman filter
-        // ground_estimator.estimateGround(cloud, ground_plane);
-        if (ground_estimator.estimateGround(cloud, ground_plane))
+        bool ground_estimated = ground_estimator.estimateGround(cloud, ground_plane);
+        if (ground_estimated)
         {
             if (verbose)
             {
@@ -127,8 +129,16 @@ int main(int argc, char** argv)
         // Visualize the point cloud if visualization is enabled
         if (visualization && cloud->size() > 0)
         {
-            // Update the visualizer with the current point cloud
-            visualizer.updateVisualizer(cloud_copy);
+            // Update the point_cloud_visualizer with the current point cloud and/or ground plane
+            if (ground_estimated)
+            {
+                point_cloud_visualizer.updateVisualizer(cloud_copy, ground_plane);
+            }
+            else
+            {
+                point_cloud_visualizer.updateVisualizer(cloud_copy);
+            }
+
             if (timer)
             {
                 auto t1 = std::chrono::steady_clock::now();

@@ -19,6 +19,7 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
     max_angle_ = config["ground_estimation"]["max_angle"].as<float>(10.0f);
     max_height_ = config["ground_estimation"]["max_height"].as<float>(0.2f);
     min_points_ = config["ground_estimation"]["min_points"].as<int>(50);
+    z_offset_ = config["ground_estimation"]["z_offset"].as<float>(0.1f);
     wall_filter_enabled_ = config["ground_estimation"]["wall_filter"]["enable"].as<bool>(true);
     max_rerun_times_ = config["ground_estimation"]["wall_filter"]["max_rerun_times"].as<int>(3);
     wall_threshold_ = config["ground_estimation"]["wall_filter"]["threshold"].as<float>(0.2f);
@@ -73,18 +74,22 @@ bool GroundEstimation::estimateGround(PointCloudPtr &cloud, std::vector<float> &
     {
         if (!getAverageFromBuffer(plane_coeffs))
         {
+            std::cerr << "\t[GroundEstimation] Warning: Failed to estimate ground plane after "
+                      << rerun_count << " attempts and no history available." << std::endl;
             return false;
         }
     }
 
     if (isGroundValid(plane_coeffs))
     {
+        plane_coeffs[3] -= plane_coeffs[2] * z_offset_;
         saveToBuffer(plane_coeffs);
     }
     else
     {
         if (!getAverageFromBuffer(plane_coeffs))
         {
+            std::cerr << "\t[GroundEstimation] Warning: Estimated ground plane is invalid and no history available." << std::endl;
             return false;
         }
     }
@@ -109,8 +114,21 @@ bool GroundEstimation::isWallLike(const std::vector<float> &plane_coeffs) const
 
 bool GroundEstimation::isGroundValid(const std::vector<float> &plane_coeffs) const
 {
-    return std::abs(plane_coeffs[2]) < std::cos(max_angle_ * M_PI / 180.0) && std::abs(plane_coeffs[3]) < max_height_;
+    float cos_thresh = std::cos(max_angle_ * M_PI / 180.0);
+    if (std::abs(plane_coeffs[2]) < cos_thresh) {
+        std::cout << "\t[GroundEstimation] Rejected plane: normal z (" << plane_coeffs[2]
+                  << ") < cos(max_angle) (" << cos_thresh << ")" << std::endl;
+        return false;
+    }
+    if (std::abs(plane_coeffs[3]) > max_height_) {
+        std::cout << "\t[GroundEstimation] Rejected plane: offset d (" << plane_coeffs[3]
+                  << ") > max_height (" << max_height_ << ")" << std::endl;
+        return false;
+    }
+    return true;
 }
+
+
 
 void GroundEstimation::saveToBuffer(const std::vector<float> &plane_coeffs)
 {
