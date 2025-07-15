@@ -69,17 +69,17 @@ private:
      */
     void flipPlaneIfNecessary(std::vector<float> &plane_coeffs);
 
-    bool enable_;       ///< Enable or disable ground estimation
+    bool enable_;                           ///< Enable or disable ground estimation
     std::deque<std::vector<float>> buffer_; ///< Buffer storing recent ground plane estimates.
-    int buffer_size_;   ///< Maximum size of the history buffer.
-    float max_angle_;   ///< Maximum allowable ground plane angle.
-    float max_height_;  ///< Maximum allowable ground plane height.
-    int min_points_;    ///< Minimum number of points required for estimation.
-    float z_offset_;    ///< Offset to adjust the ground plane height, useful for fine-tuning.
+    int buffer_size_;           ///< Maximum size of the history buffer.
+    float max_angle_;           ///< Maximum allowable ground plane angle.
+    float max_height_;          ///< Maximum allowable ground plane height.
+    int min_points_;            ///< Minimum number of points required for estimation.
+    float z_offset_;            ///< Offset to adjust the ground plane height, useful for fine-tuning.
     bool wall_filter_enabled_;  ///< Flag indicating if wall filtering is enabled.
     int max_rerun_times_;       ///< Maximum number of RANSAC retries for wall filtering.
     float wall_threshold_;      ///< Threshold for determining if a plane resembles a wall.
 
-    std::unique_ptr<Ransac> ransac_; ///< RANSAC-based plane estimation.
-    std::unique_ptr<WallFilter> wall_filter_; ///< Wall filter for refining the ground estimate.
+    std::unique_ptr<Ransac> ransac_;            ///< RANSAC-based plane estimation.
+    std::unique_ptr<WallFilter> wall_filter_;   ///< Wall filter for refining the ground estimate.
 };

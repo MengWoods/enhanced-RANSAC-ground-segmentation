@@ -1,23 +1,27 @@
-verbose: false
-timer: false
+# enhanced_ransac.yaml
+# Configuration file for Enhanced RANSAC Ground Segmentation
+
+verbose: true
+timer: true
+frequency: 15  # Frequency in Hz for the main loop
 result_path: ~/Documents/github/enhanced_RANSAC_ground_segmentation/results
 
 point_cloud_loader:
   verbose: false  # Print debug information
   point_cloud_paths:
-    # - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
+    - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
   point_cloud_type: xyzi  # Options: xyzi, xyz, xyi, xyzrgb
 
 box_filter:
   enable: true
-  xmin: -10.0
-  xmax: 10.0
-  ymin: -10.0
-  ymax: 10.0
-  zmin: -5.0
-  zmax: 3.0
+  xmin: -8.0
+  xmax: 8.0
+  ymin: -8.0
+  ymax: 8.0
+  zmin: -3.0
+  zmax: 1.0
 
 voxel_filter:
   enable: true
@@ -31,9 +35,9 @@ noise_filter:
 
 point_cloud_visualizer:
   enable: true          # Enable or disable point cloud visualization
-  camera_distance: 25   # Distance from the origin (camera to object)
+  camera_distance: 30   # Distance from the origin (camera to object)
   angle: 160.0          # Camera rotation angle in degrees around y-axis (horizontal rotation)
-  refresh_interval: 50  # Time interval in ms for refreshing the visualization
+  refresh_interval: 10  # Time interval in ms for refreshing the visualization
 
 ransac:
   distance_threshold: 0.1  # Maximum distance for a point to be considered in the plane
@@ -43,12 +47,12 @@ ransac:
 
 ground_estimation:
   verbose: true
-  enable: false
-  buffer_size: 20
+  enable: true
+  buffer_size: 50
   max_angle: 20.0  # Degrees angle between plane's normal and the Z-axis.
   max_height: 2  # Meters
   min_points: 30           # Minimum number of points required for a valid plane
-  z_offset: 0  # Offset to adjust the ground plane height
+  z_offset: 0.1  # Offset to adjust the ground plane height
   wall_filter:
     enable: false              # Enable or disable the wall filter
     max_rerun_times: 3        # Maximum number of times to rerun the filter if needed.
