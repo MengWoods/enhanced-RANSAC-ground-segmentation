@@ -21,8 +21,8 @@ PointCloudLoader::PointCloudLoader(const YAML::Node &config)
 
     // Log the initialization parameters
     std::cout << "[PointCloudLoader] Initialized with " << cloud_paths_.size()
-          << " path(s), type: " << cloud_type_ << ", verbose: "
-          << (verbose_ ? "true" : "false") << std::endl;
+              << " path(s), type: " << cloud_type_ << ", verbose: "
+              << (verbose_ ? "true" : "false") << std::endl;
 
     loadFileList();
     file_iter_ = file_list_.begin();

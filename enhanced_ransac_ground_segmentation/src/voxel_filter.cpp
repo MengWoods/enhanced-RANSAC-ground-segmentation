@@ -14,10 +14,15 @@ VoxelFilter::VoxelFilter(const YAML::Node &config)
 
     if (enabled_)
     {
-        std::cout << "VoxelFilter enabled with voxel size: " << voxel_size_ << " meters." << std::endl;
+        std::cout << "[VoxelFilter] Loaded parameters:" << std::endl;
+        std::cout << "  - Enabled: " << (enabled_ ? "true" : "false") << std::endl;
+        std::cout << "  - Voxel Size: " << voxel_size_ << std::endl;
+    }
+    else
+    {
+        std::cout << "[VoxelFilter] Voxel filter is disabled." << std::endl;
     }
 }
-
 
 void VoxelFilter::applyFilter(PointCloudPtr &cloud)
 {

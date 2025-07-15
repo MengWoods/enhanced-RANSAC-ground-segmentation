@@ -20,10 +20,14 @@ BoxFilter::BoxFilter(const YAML::Node& config)
 
     if (enable_)
     {
-        std::cout << "BoxFilter initialized with:" << std::endl;
+        std::cout << "[BoxFilter] Loaded parameters:" << std::endl;
         std::cout << "  xmin: " << xmin_ << ", xmax: " << xmax_ << std::endl;
         std::cout << "  ymin: " << ymin_ << ", ymax: " << ymax_ << std::endl;
         std::cout << "  zmin: " << zmin_ << ", zmax: " << zmax_ << std::endl;
+    }
+    else
+    {
+        std::cout << "[BoxFilter] Box filter is disabled." << std::endl;
     }
 
     // Set up the PCL crop box filter with the bounding box limits

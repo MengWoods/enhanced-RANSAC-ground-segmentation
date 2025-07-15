@@ -49,11 +49,6 @@ int main(int argc, char** argv)
     GroundEstimation ground_estimator(config);
     NoiseFilter noise_filter(config);
 
-    if (visualization)
-    {
-        point_cloud_visualizer.initVisualizer();
-    }
-
     PointCloudPtr cloud(new PointCloud());
     std::vector<float> ground_plane;
 
@@ -114,7 +109,10 @@ int main(int argc, char** argv)
         }
         else
         {
-            std::cout << "\t[GroundEstimation] Failed to estimate ground plane." << std::endl;
+            if (verbose)
+            {
+                std::cout << "\t[GroundEstimation] Failed to estimate ground plane." << std::endl;
+            }
         }
 
         if (timer)
@@ -132,20 +130,21 @@ int main(int argc, char** argv)
             // Update the point_cloud_visualizer with the current point cloud and/or ground plane
             if (ground_estimated)
             {
-                point_cloud_visualizer.updateVisualizer(cloud_copy, ground_plane);
+                point_cloud_visualizer.pushFrame(cloud_copy, ground_plane);
             }
             else
             {
-                point_cloud_visualizer.updateVisualizer(cloud_copy);
+                point_cloud_visualizer.pushFrame(cloud_copy);
             }
+        }
 
-            if (timer)
-            {
-                auto t1 = std::chrono::steady_clock::now();
-                std::cout << "[Timer] Visualization: "
-                        << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
-                        << " ms" << std::endl;
-            }
+        if (timer)
+        {
+            auto t1 = std::chrono::steady_clock::now();
+            std::cout << "[Timer] Visualization: "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                    << " ms" << std::endl;
+            t0 = t1;
         }
 
         if (timer)

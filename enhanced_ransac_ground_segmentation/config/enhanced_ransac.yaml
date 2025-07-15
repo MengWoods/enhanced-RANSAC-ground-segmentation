@@ -1,23 +1,23 @@
-verbose: true
-timer: true
+verbose: false
+timer: false
 result_path: ~/Documents/github/enhanced_RANSAC_ground_segmentation/results
 
 point_cloud_loader:
   verbose: false  # Print debug information
   point_cloud_paths:
-    - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
+    # - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
   point_cloud_type: xyzi  # Options: xyzi, xyz, xyi, xyzrgb
 
 box_filter:
   enable: true
-  xmin: -8.0
-  xmax: 8.0
-  ymin: -8.0
-  ymax: 8.0
+  xmin: -10.0
+  xmax: 10.0
+  ymin: -10.0
+  ymax: 10.0
   zmin: -5.0
-  zmax: 8.0
+  zmax: 3.0
 
 voxel_filter:
   enable: true
@@ -36,19 +36,19 @@ point_cloud_visualizer:
   refresh_interval: 50  # Time interval in ms for refreshing the visualization
 
 ransac:
-  distance_threshold: 0.2  # Maximum distance for a point to be considered in the plane
+  distance_threshold: 0.1  # Maximum distance for a point to be considered in the plane
   max_iterations: 30      # Maximum number of RANSAC iterations
-  min_points: 20           # Minimum number of points required for a valid plane
+  min_points: 40           # Minimum number of points required for a valid plane
   timer: true
 
 ground_estimation:
   verbose: true
   enable: false
-  buffer_size: 80
+  buffer_size: 20
   max_angle: 20.0  # Degrees angle between plane's normal and the Z-axis.
   max_height: 2  # Meters
   min_points: 30           # Minimum number of points required for a valid plane
-  z_offset: 0.3  # Offset to adjust the ground plane height
+  z_offset: 0  # Offset to adjust the ground plane height
   wall_filter:
     enable: false              # Enable or disable the wall filter
     max_rerun_times: 3        # Maximum number of times to rerun the filter if needed.

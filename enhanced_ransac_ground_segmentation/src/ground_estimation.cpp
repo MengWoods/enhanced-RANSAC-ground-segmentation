@@ -27,17 +27,31 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
     ransac_ = std::make_unique<Ransac>(config);
     wall_filter_ = std::make_unique<WallFilter>(wall_threshold_);
 
-    std::cout << "[GroundEstimation] Initialized with buffer_size: " << buffer_size_ << ", max_angle: " << max_angle_ << ", max_height: " << max_height_ << ", min_points: " << min_points_ << "\n";
-
-    std::cout << "[WallFilter] enabled: " << (wall_filter_enabled_ ? "true" : "false")
-              << ", max_rerun_times: " << max_rerun_times_ << ", threshold: " << wall_threshold_ << "\n";
+    // Log the initialization parameters
+    if (enable_)
+    {
+        std::cout << "[GroundEstimation] Loaded parameters:" << std::endl;
+        std::cout << "  - Enable: " << (enable_ ? "true" : "false") << std::endl;
+        std::cout << "  - Buffer Size: " << buffer_size_ << std::endl;
+        std::cout << "  - Max Angle: " << max_angle_ << " degrees" << std::endl;
+        std::cout << "  - Max Height: " << max_height_ << " meters" << std::endl;
+        std::cout << "  - Min Points: " << min_points_ << std::endl;
+        std::cout << "  - Z Offset: " << z_offset_ << " meters" << std::endl;
+        std::cout << "  - Wall Filter Enabled: " << (wall_filter_enabled_ ? "true" : "false") << std::endl;
+        std::cout << "  - Max Rerun Times: " << max_rerun_times_ << std::endl;
+        std::cout << "  - Wall Threshold: " << wall_threshold_ << std::endl;
+    }
+    else
+    {
+        std::cout << "[GroundEstimation] Ground estimation is disabled." << std::endl;
+    }
 }
 
 bool GroundEstimation::estimateGround(PointCloudPtr &cloud, std::vector<float> &plane_coeffs)
 {
+    std::cout << "[GroundEstimation] Buffer size: " << buffer_.size() << std::endl;
     if (!enable_)
     {
-        std::cerr << "\t[GroundEstimation] Ground estimation is disabled." << std::endl;
         return false;
     }
     if (cloud->size() < min_points_)

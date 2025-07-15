@@ -16,8 +16,14 @@ NoiseFilter::NoiseFilter(const YAML::Node &config)
 
     if (enabled_)
     {
-        std::cout << "NoiseFilter enabled with mean_k: " << mean_k_
-                  << ", std_dev: " << std_dev_ << std::endl;
+        std::cout << "[NoiseFilter] Loaded parameters:" << std::endl;
+        std::cout << "  - Enabled: " << (enabled_ ? "true" : "false") << std::endl;
+        std::cout << "  - Mean K: " << mean_k_ << std::endl;
+        std::cout << "  - Std Dev: " << std_dev_ << std::endl;
+    }
+    else
+    {
+        std::cout << "[NoiseFilter] Noise filter is disabled." << std::endl;
     }
 }
 

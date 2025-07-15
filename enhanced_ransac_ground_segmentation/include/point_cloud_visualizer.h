@@ -7,7 +7,18 @@
 #pragma once
 #include "constant.h"
 
+#include <optional>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
 #include <pcl/visualization/pcl_visualizer.h>
+
+struct VisualizerData
+{
+    PointCloud::Ptr cloud;
+    std::vector<float> plane_coeffs;
+};
 
 class PointCloudVisualizer
 {
@@ -24,30 +35,49 @@ public:
     ~PointCloudVisualizer();
 
     /**
-     * @brief Initializes the visualizer, adds coordinate system and sets camera parameters.
+     * @brief Starts the viewer thread to handle visualization updates.
      */
-    void initVisualizer();
+    void pushFrame(PointCloud::Ptr cloud, std::vector<float> plane_coeffs);
 
     /**
-     * @brief Updates the visualizer with the new point cloud.
-     *        If the point cloud is not added yet, it will add the point cloud.
+     * @brief Pushes a new point cloud frame to the visualizer.
      * @param cloud The point cloud to visualize.
      */
-    void updateVisualizer(const PointCloud::Ptr &cloud);
-
-    /**
-     * @brief Updates the visualizer with the new point cloud and ground plane coefficients.
-     *        If the ground plane is valid, it will visualize points into different colors based on the ground plane.
-     * @param cloud The point cloud to visualize.
-     * @param ground_plane Coefficients of the ground plane (a, b, c, d).
-     */
-    void updateVisualizer(const PointCloud::Ptr &cloud, const std::vector<float> &ground_plane);
+    void pushFrame(PointCloud::Ptr cloud);
 
 private:
     pcl::visualization::PCLVisualizer::Ptr viewer_; ///< PCL visualizer instance
     float camera_distance_;                         ///< Distance from the origin (camera to object)
     float angle_;                                   ///< Camera rotation angle in degrees around y-axis (horizontal rotation)
     int refresh_interval_;                          ///< Time interval in ms for refreshing the visualization
+
+    /* ---------- threading primitives ---------- */
+    std::thread thread_;                        ///< Thread for running the visualizer loop
+    std::mutex mtx_;                            ///< Mutex for synchronizing access to shared data
+    std::condition_variable cv_;                ///< Condition variable for signaling updates
+    std::optional<VisualizerData> latest_data_; ///< Latest data to visualize
+    bool shutdown_{false};                      ///< Flag to indicate if the viewer thread should shut down
+
+
+    /**
+     * @brief Initializes the visualizer, adds coordinate system and sets camera parameters.
+     */
+    void initViewer();
+
+    /**
+     * @brief Main loop for the viewer thread, processes visualization updates.
+     */
+    void runViewerLoop();
+
+    /**
+     * @brief Starts the viewer thread.
+     */
+    void startViewerThread();
+
+    /**
+     * @brief Stops the viewer thread and cleans up resources.
+     */
+    void stopViewerThread();
 
     /**
      * @brief Splits the point cloud into two parts based on the ground plane coefficients.

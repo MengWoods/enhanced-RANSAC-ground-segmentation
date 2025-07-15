@@ -11,7 +11,7 @@
  * @class WallFilter
  * @brief Filters vertical planes (walls) from a point cloud based on plane coefficients.
  */
-class WallFilter 
+class WallFilter
 {
 public:
     /**

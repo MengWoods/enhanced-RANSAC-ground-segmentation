@@ -1,3 +1,9 @@
+/*
+ * Enhanced RANSAC Ground Segmentation
+ * Copyright (c) 2025 Menghao Woods
+ *
+ * Licensed under the MIT License. See LICENSE file in the project root for details.
+ */
 #include "point_cloud_visualizer.h"
 
 PointCloudVisualizer::PointCloudVisualizer(const YAML::Node &config)
@@ -8,24 +14,178 @@ PointCloudVisualizer::PointCloudVisualizer(const YAML::Node &config)
     refresh_interval_ = config["point_cloud_visualizer"]["refresh_interval"].as<int>(10);
 
     // Log the initialization parameters
-    std::cout << "[PointCloudVisualizer] Initialized with camera_distance: " << camera_distance_
-              << ", angle: " << angle_ << ", refresh_interval: " << refresh_interval_ << " ms" << std::endl;
+    std::cout << "[PointCloudVisualizer] Initializing with parameters:" << std::endl;
+    std::cout << "  - Camera Distance: " << camera_distance_ << std::endl;
+    std::cout << "  - Angle: " << angle_ << " degrees" << std::endl;
+    std::cout << "  - Refresh Interval: " << refresh_interval_ << " ms" << std::endl;
 
-    viewer_ = pcl::visualization::PCLVisualizer::Ptr(new pcl::visualization::PCLVisualizer("PointCloud Viewer"));
+    startViewerThread();    // launch viewer thread
 }
 
 PointCloudVisualizer::~PointCloudVisualizer()
 {
-    if (viewer_)
+    stopViewerThread();
+}
+
+void PointCloudVisualizer::startViewerThread()
+{
+    thread_ = std::thread(&PointCloudVisualizer::runViewerLoop, this);
+}
+
+void PointCloudVisualizer::stopViewerThread()
+{
+    // Gracefully shut down the viewer thread.
     {
-        viewer_->close();
+        std::lock_guard lk(mtx_);
+        shutdown_ = true;
+    }
+    cv_.notify_one(); // Wake up the thread if it's waiting.
+    if (thread_.joinable())
+    {
+        thread_.join();
     }
 }
 
-void PointCloudVisualizer::initVisualizer()
+void PointCloudVisualizer::pushFrame(PointCloud::Ptr cloud,
+                                     std::vector<float> plane)
+{
+    {
+        std::lock_guard lk(mtx_);
+        latest_data_ = VisualizerData{std::move(cloud), std::move(plane)};
+    }
+    cv_.notify_one();   // Notify the runViewerLoop that new data is available.
+}
+
+void PointCloudVisualizer::pushFrame(PointCloud::Ptr cloud)
+{
+    // Call the original function with an empty vector for the plane
+    pushFrame(std::move(cloud), {});
+}
+
+
+void PointCloudVisualizer::runViewerLoop()
+{
+    initViewer();
+
+    // --- Create all necessary placeholder actors once ---
+    PointCloud::Ptr dummy(new PointCloud);
+
+    // Actor for the single, unsplit cloud
+    viewer_->addPointCloud<Point>(dummy, "cloud");
+    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1, 1, 1, "cloud"); // White
+    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud");
+
+    // Actor for points above the plane
+    viewer_->addPointCloud<Point>(dummy, "above_cloud");
+    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1, 1, 1, "above_cloud"); // White
+    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "above_cloud");
+
+    // Actor for points below the plane
+    viewer_->addPointCloud<Point>(dummy, "below_cloud");
+    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0, 1, 0, "below_cloud"); // Green
+    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "below_cloud");
+
+    // --- Main Update Loop ---
+    while (!viewer_->wasStopped() && !shutdown_)
+    {
+        VisualizerData msg;
+        {
+            std::unique_lock lk(mtx_);
+            cv_.wait(lk, [&]{ return latest_data_.has_value() || shutdown_; });
+            if (shutdown_) break;
+            msg = std::move(*latest_data_);
+            latest_data_.reset();
+        }
+
+        // --- NEW: Check if a valid plane was provided ---
+        if (msg.plane_coeffs.size() == 4)
+        {
+            // --- Logic for visualizing with a ground plane ---
+            auto [above, below] = splitCloudByPlane(msg.cloud, msg.plane_coeffs);
+
+            // Update the split clouds
+            viewer_->updatePointCloud<Point>(above, "above_cloud");
+            viewer_->updatePointCloud<Point>(below, "below_cloud");
+
+            // Hide the single cloud actor by giving it an empty cloud
+            viewer_->updatePointCloud<Point>(dummy, "cloud");
+
+            // Update the plane shape
+            pcl::ModelCoefficients coeffs;
+            coeffs.values = msg.plane_coeffs;
+            viewer_->removeShape("ground_plane");
+            viewer_->addPlane(coeffs, "ground_plane");
+        }
+        else
+        {
+            // --- Logic for visualizing a single point cloud ---
+
+            // Update the single cloud actor with the full cloud
+            viewer_->updatePointCloud<Point>(msg.cloud, "cloud");
+
+            // Hide the split cloud actors and the plane
+            viewer_->updatePointCloud<Point>(dummy, "above_cloud");
+            viewer_->updatePointCloud<Point>(dummy, "below_cloud");
+            viewer_->removeShape("ground_plane");
+        }
+
+        viewer_->spinOnce(refresh_interval_);
+    }
+}
+
+// void PointCloudVisualizer::runViewerLoop()
+// {
+//     initViewer();
+
+//     /* -- add placeholder actors so updatePointCloud works immediately -- */
+//     PointCloud::Ptr dummy(new PointCloud);
+//     viewer_->addPointCloud<Point>(dummy, "above_cloud");
+//     viewer_->addPointCloud<Point>(dummy, "below_cloud");
+
+//     while (!viewer_->wasStopped())
+//     {
+//         /* ----- wait for new data or shutdown request ----- */
+//         VisualizerData msg;
+//         {
+//             std::unique_lock lk(mtx_);
+//             cv_.wait(lk, [&]{ return latest_data_ || shutdown_; });
+//             if (shutdown_) break;
+//             msg = std::move(*latest_data_);
+//             latest_data_.reset();
+//         }
+
+//         /* ----- split and update geometries ----- */
+//         auto [above, below] = splitCloudByPlane(msg.cloud, msg.plane_coeffs);
+
+//         viewer_->updatePointCloud<Point>(above, "above_cloud");
+//         viewer_->setPointCloudRenderingProperties(
+//             pcl::visualization::PCL_VISUALIZER_COLOR, 1, 1, 1, "above_cloud");
+//         viewer_->setPointCloudRenderingProperties(
+//             pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "above_cloud");
+
+//         viewer_->updatePointCloud<Point>(below, "below_cloud");
+//         viewer_->setPointCloudRenderingProperties(
+//             pcl::visualization::PCL_VISUALIZER_COLOR, 0, 1, 0, "below_cloud");
+//         viewer_->setPointCloudRenderingProperties(
+//             pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "below_cloud");
+
+//         if (msg.plane_coeffs.size() == 4)
+//         {
+//             pcl::ModelCoefficients coeffs; coeffs.values = msg.plane_coeffs;
+//             viewer_->removeShape("ground_plane");
+//             viewer_->addPlane(coeffs, "ground_plane");
+//         }
+
+//         viewer_->spinOnce(refresh_interval_);
+//     }
+// }
+
+
+void PointCloudVisualizer::initViewer()
 {
     // Set default point cloud rendering properties
-    viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud");
+    viewer_.reset(new pcl::visualization::PCLVisualizer("Ground Segmentation Visualizer"));
+    // viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud");
     viewer_->addCoordinateSystem(1.0); // Add coordinate system for reference
     viewer_->initCameraParameters(); // Initialize camera parameters for the viewer
 
@@ -42,64 +202,6 @@ void PointCloudVisualizer::initVisualizer()
     viewer_->setCameraPosition(x_position, y_position, z_position,  // Camera position (x, y, z)
                                0.0, 0.0, 0.0,                   // Look at the origin (0, 0, 0)
                                1.0, 0.0, 0.0);                  // Up direction along the x-axis
-}
-
-void PointCloudVisualizer::updateVisualizer(
-    const PointCloud::Ptr &cloud, const std::vector<float> &ground_plane)
-{
-    // If no valid plane, fallback to single cloud visualization
-    if (ground_plane.size() != 4)
-    {
-        if (!viewer_->updatePointCloud<Point>(cloud, "cloud"))
-        {
-            viewer_->addPointCloud<Point>(cloud, "cloud");
-            viewer_->setPointCloudRenderingProperties(
-                pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud");
-        }
-
-        viewer_->spinOnce(refresh_interval_);
-        return;
-    }
-
-    // Use helper function to split cloud
-    auto [above_cloud, below_cloud] = splitCloudByPlane(cloud, ground_plane);
-
-    // Visualize points above the plane (white)
-    if (!viewer_->updatePointCloud<Point>(above_cloud, "above_cloud"))
-    {
-        viewer_->addPointCloud<Point>(above_cloud, "above_cloud");
-        viewer_->setPointCloudRenderingProperties(
-            pcl::visualization::PCL_VISUALIZER_COLOR, 1.0, 1.0, 1.0, "above_cloud");
-        viewer_->setPointCloudRenderingProperties(
-            pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "above_cloud");
-    }
-
-    // Visualize points on/below the plane (green)
-    if (!viewer_->updatePointCloud<Point>(below_cloud, "below_cloud"))
-    {
-        viewer_->addPointCloud<Point>(below_cloud, "below_cloud");
-        viewer_->setPointCloudRenderingProperties(
-            pcl::visualization::PCL_VISUALIZER_COLOR, 0.0, 1.0, 0.0, "below_cloud");
-        viewer_->setPointCloudRenderingProperties(
-            pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "below_cloud");
-    }
-
-    viewer_->spinOnce(refresh_interval_);
-}
-
-
-void PointCloudVisualizer::updateVisualizer(const PointCloud::Ptr &cloud)
-{
-    // If the point cloud is already added, update it
-    if (!viewer_->updatePointCloud<Point>(cloud, "cloud"))
-    {
-        // If the point cloud is not yet added, add it to the visualizer
-        viewer_->addPointCloud<Point>(cloud, "cloud");
-        viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud");
-    }
-
-    // Spin the viewer once to update the display (this is done in the loop)
-    viewer_->spinOnce(refresh_interval_);
 }
 
 std::pair<PointCloud::Ptr, PointCloud::Ptr> PointCloudVisualizer::splitCloudByPlane(
