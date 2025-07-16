@@ -1,61 +1,91 @@
-# enhanced_ransac.yaml
-# Configuration file for Enhanced RANSAC Ground Segmentation
+# ===================================================================
+# Configuration File for Enhanced RANSAC Ground Segmentation
+# ===================================================================
 
-verbose: true
-timer: true
-frequency: 15  # Frequency in Hz for the main loop
-result_path: ~/Documents/github/enhanced_RANSAC_ground_segmentation/results
+# -------------------------------------------------------------------
+# GENERAL SETTINGS
+# -------------------------------------------------------------------
+# Global settings for the main application loop.
+
+verbose: false        # Enable/disable detailed console output for the main application.
+timer: true           # Enable/disable performance timers for each processing step.
+frequency: 15         # Target loop frequency in Hz. The program will pause to not exceed this rate.
+result_path: "~/Documents/github/enhanced_RANSAC_ground_segmentation/results" # Path to save any output files.
+
+# -------------------------------------------------------------------
+# DATA LOADER SETTINGS
+# -------------------------------------------------------------------
+# Configure the source of the point cloud data.
 
 point_cloud_loader:
-  verbose: false  # Print debug information
-  point_cloud_paths:
-    # - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
+  verbose: false      # Print debug information specific to the data loader.
+  point_cloud_paths:  # List of paths to the KITTI velodyne_points/data directories.
+    - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
-  point_cloud_type: xyzi  # Options: xyzi, xyz, xyi, xyzrgb
+  point_cloud_type: xyzi # Point format. Options: xyzi, xyz, xyi, xyzrgb
+
+# -------------------------------------------------------------------
+# PRE-PROCESSING FILTERS
+# -------------------------------------------------------------------
+# Filters applied to the raw point cloud before ground estimation.
 
 box_filter:
-  enable: true
-  xmin: -10.0
-  xmax: 10.0
-  ymin: -10.0
-  ymax: 10.0
-  zmin: -3.0
-  zmax: 1.0
+  enable: true       # If true, keeps only points within the defined XYZ box.
+  xmin: -10.0         # Minimum X coordinate (meters).
+  xmax: 10.0          # Maximum X coordinate (meters).
+  ymin: -10.0         # Minimum Y coordinate (meters).
+  ymax: 10.0          # Maximum Y coordinate (meters).
+  zmin: -3.0          # Minimum Z coordinate (meters).
+  zmax: 1.0           # Maximum Z coordinate (meters).
 
 voxel_filter:
-  enable: true
-  voxel_size: 0.15
+  enable: true        # If true, downsamples the point cloud using a voxel grid.
+  voxel_size: 0.15    # The size of each voxel in meters. Larger values reduce points more.
 
 noise_filter:
-  enable: false      # Enable or disable noise filtering
-  mean_k: 10        # Number of nearest neighbors to analyze
-  std_dev: 2.0      # Standard deviation threshold
-  verbose: true     # Print debug information
+  enable: true        # If true, removes points considered to be statistical outliers.
+  mean_k: 10          # Number of nearest neighbors to analyze for each point.
+  std_dev: 2.0        # Standard deviation multiplier threshold. Points with a distance larger
+                      # than this multiplier of the mean distance will be removed.
+  verbose: true       # Print debug information specific to the noise filter.
 
-point_cloud_visualizer:
-  enable: true          # Enable or disable point cloud visualization
-  camera_distance: 30   # Distance from the origin (camera to object)
-  angle: 160.0          # Camera rotation angle in degrees around y-axis (horizontal rotation)
-  refresh_interval: 10  # Time interval in ms for refreshing the visualization
+# -------------------------------------------------------------------
+# CORE ALGORITHMS
+# -------------------------------------------------------------------
+# Settings for the main ground estimation logic.
 
 ransac:
-  distance_threshold: 0.1  # Maximum distance for a point to be considered in the plane
-  max_iterations: 40      # Maximum number of RANSAC iterations
-  min_points: 40           # Minimum number of points required for a valid plane
-  timer: false
+  distance_threshold: 0.1  # Max distance (meters) for a point to be considered an inlier to the plane.
+  max_iterations: 500      # Number of random samples to draw. Higher values increase the chance
+                           # of finding the optimal plane but increase computation time.
+  min_points: 40           # Minimum number of points required for the RANSAC algorithm to run.
+  timer: false             # Enable/disable a specific timer for just the RANSAC function.
 
 ground_estimation:
-  verbose: true
-  enable: true
-  buffer_size: 50
-  max_angle: 20.0  # Degrees angle between plane's normal and the Z-axis.
-  max_height: 2  # Meters
-  min_points: 30           # Minimum number of points required for a valid plane
-  z_offset: 0.1  # Offset to adjust the ground plane height
+  enable: true             # Master switch for the entire ground estimation process.
+  verbose: true            # Print debug info for the ground estimation logic.
+  buffer_size: 50          # Number of recent valid planes to store for the moving average fallback.
+  max_angle: 20.0          # Max angle (degrees) between a plane's normal and the Z-axis to be
+                           # considered a valid ground plane. Prevents walls/ramps from being chosen.
+  max_height: 2.0          # Max height (meters) of the ground plane's 'd' coefficient.
+  min_points: 30           # Minimum number of points required in the cloud for estimation to proceed.
+  z_offset: 0.1            # An offset (meters) to vertically adjust the final ground plane.
+
   wall_filter:
-    enable: false              # Enable or disable the wall filter
-    max_rerun_times: 3        # Maximum number of times to rerun the filter if needed.
-    threshold: 0.2            # Distance threshold (in meters) for filtering out points near the wall.
-    angle_threshold: 30       # Angle threshold (in degrees) to determine if the detected plane is a wall.
-                              # If the normal angle of the detected plane exceeds this threshold, it will be treated as a wall.
+    enable: false          # If true, attempts to detect and filter out vertical walls before re-running RANSAC.
+    max_rerun_times: 3     # Max number of times to rerun RANSAC after filtering a wall.
+    threshold: 0.2         # Distance threshold (meters) for filtering points near a detected wall.
+    angle_threshold: 30    # Angle (degrees) to classify a plane as a wall. If the plane's normal
+                           # is more horizontal than this, it's considered a wall.
+
+# -------------------------------------------------------------------
+# VISUALIZATION
+# -------------------------------------------------------------------
+# Settings for the PCL visualizer window.
+
+point_cloud_visualizer:
+  enable: true             # If true, opens a PCL window to visualize the results.
+  camera_distance: 30.0    # Initial camera distance from the origin (meters).
+  angle: 160.0             # Initial camera angle (degrees) around the vertical axis.
+  refresh_interval: 10     # Time (ms) between viewer updates. Lower is faster.

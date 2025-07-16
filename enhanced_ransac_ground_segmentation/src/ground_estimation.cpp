@@ -49,7 +49,6 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
 
 bool GroundEstimation::estimateGround(PointCloudPtr &cloud, std::vector<float> &plane_coeffs)
 {
-    std::cout << "[GroundEstimation] Buffer size: " << buffer_.size() << std::endl;
     if (!enable_)
     {
         return false;
@@ -141,8 +140,6 @@ bool GroundEstimation::isGroundValid(const std::vector<float> &plane_coeffs) con
     }
     return true;
 }
-
-
 
 void GroundEstimation::saveToBuffer(const std::vector<float> &plane_coeffs)
 {
