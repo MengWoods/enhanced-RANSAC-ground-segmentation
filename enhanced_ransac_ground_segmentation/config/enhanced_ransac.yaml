@@ -9,17 +9,17 @@ result_path: ~/Documents/github/enhanced_RANSAC_ground_segmentation/results
 point_cloud_loader:
   verbose: false  # Print debug information
   point_cloud_paths:
-    - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
+    # - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
   point_cloud_type: xyzi  # Options: xyzi, xyz, xyi, xyzrgb
 
 box_filter:
   enable: true
-  xmin: -8.0
-  xmax: 8.0
-  ymin: -8.0
-  ymax: 8.0
+  xmin: -10.0
+  xmax: 10.0
+  ymin: -10.0
+  ymax: 10.0
   zmin: -3.0
   zmax: 1.0
 
@@ -41,9 +41,9 @@ point_cloud_visualizer:
 
 ransac:
   distance_threshold: 0.1  # Maximum distance for a point to be considered in the plane
-  max_iterations: 30      # Maximum number of RANSAC iterations
+  max_iterations: 40      # Maximum number of RANSAC iterations
   min_points: 40           # Minimum number of points required for a valid plane
-  timer: true
+  timer: false
 
 ground_estimation:
   verbose: true
