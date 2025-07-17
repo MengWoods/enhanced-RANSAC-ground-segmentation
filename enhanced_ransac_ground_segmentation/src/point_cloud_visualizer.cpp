@@ -133,54 +133,6 @@ void PointCloudVisualizer::runViewerLoop()
     }
 }
 
-// void PointCloudVisualizer::runViewerLoop()
-// {
-//     initViewer();
-
-//     /* -- add placeholder actors so updatePointCloud works immediately -- */
-//     PointCloud::Ptr dummy(new PointCloud);
-//     viewer_->addPointCloud<Point>(dummy, "above_cloud");
-//     viewer_->addPointCloud<Point>(dummy, "below_cloud");
-
-//     while (!viewer_->wasStopped())
-//     {
-//         /* ----- wait for new data or shutdown request ----- */
-//         VisualizerData msg;
-//         {
-//             std::unique_lock lk(mtx_);
-//             cv_.wait(lk, [&]{ return latest_data_ || shutdown_; });
-//             if (shutdown_) break;
-//             msg = std::move(*latest_data_);
-//             latest_data_.reset();
-//         }
-
-//         /* ----- split and update geometries ----- */
-//         auto [above, below] = splitCloudByPlane(msg.cloud, msg.plane_coeffs);
-
-//         viewer_->updatePointCloud<Point>(above, "above_cloud");
-//         viewer_->setPointCloudRenderingProperties(
-//             pcl::visualization::PCL_VISUALIZER_COLOR, 1, 1, 1, "above_cloud");
-//         viewer_->setPointCloudRenderingProperties(
-//             pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "above_cloud");
-
-//         viewer_->updatePointCloud<Point>(below, "below_cloud");
-//         viewer_->setPointCloudRenderingProperties(
-//             pcl::visualization::PCL_VISUALIZER_COLOR, 0, 1, 0, "below_cloud");
-//         viewer_->setPointCloudRenderingProperties(
-//             pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "below_cloud");
-
-//         if (msg.plane_coeffs.size() == 4)
-//         {
-//             pcl::ModelCoefficients coeffs; coeffs.values = msg.plane_coeffs;
-//             viewer_->removeShape("ground_plane");
-//             viewer_->addPlane(coeffs, "ground_plane");
-//         }
-
-//         viewer_->spinOnce(refresh_interval_);
-//     }
-// }
-
-
 void PointCloudVisualizer::initViewer()
 {
     // Set default point cloud rendering properties

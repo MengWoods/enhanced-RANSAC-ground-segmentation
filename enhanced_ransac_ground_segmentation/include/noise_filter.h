@@ -8,6 +8,9 @@
 #include "constant.h"
 
 #include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/search/kdtree.h>
+
+#include <omp.h>
 
 /**
  * @class NoiseFilter
