@@ -63,6 +63,7 @@ int main(int argc, char** argv)
 
     while (point_cloud_loader.loadNextPointCloud(cloud))
     {
+        std::cout << "\033[2J\033[H";
         // Init
         auto frame_start = std::chrono::steady_clock::now();
         if (timer) std::cout << "------------------- Frame -------------------" << std::endl;
@@ -174,6 +175,8 @@ int main(int argc, char** argv)
             auto frame_duration = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end - frame_start).count();
             std::cout << "[Timer] Total Frame Time: " << frame_duration << " ms" << std::endl;
         }
+        if (timer) std::cout << "------------------- End ---------------------" << std::endl;
+        std::cout << std::flush;
     }
 
     return 0;

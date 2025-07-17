@@ -41,7 +41,7 @@ box_filter:
 
 voxel_filter:
   enable: true        # If true, downsamples the point cloud using a voxel grid.
-  voxel_size: 0.15    # The size of each voxel in meters. Larger values reduce points more.
+  voxel_size: 0.30    # The size of each voxel in meters. Larger values reduce points more.
 
 noise_filter:
   enable: true        # If true, removes points considered to be statistical outliers.
@@ -56,7 +56,7 @@ noise_filter:
 
 ransac:
   distance_threshold: 0.1  # Max distance (meters) for a point to be considered an inlier to the plane.
-  max_iterations: 500      # Number of random samples to draw. Higher values increase the chance
+  max_iterations: 400      # Number of random samples to draw. Higher values increase the chance
                            # of finding the optimal plane but increase computation time.
   min_points: 40           # Minimum number of points required for the RANSAC algorithm to run.
   timer: false             # Enable/disable a specific timer for just the RANSAC function.
