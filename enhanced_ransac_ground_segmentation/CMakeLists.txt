@@ -17,6 +17,7 @@ find_package(OpenCV REQUIRED)           # For visualization
 find_package(PCL REQUIRED)              # For point cloud processing
 find_package(yaml-cpp REQUIRED)         # For YAML parsing
 find_package(CUDA REQUIRED)             # For CUDA runtime
+find_package(OpenMP REQUIRED)           # For parallel processing
 
 # Include CUDA-specific CMake macros
 include_directories(${CUDA_INCLUDE_DIRS})  # Add CUDA include directories
@@ -30,4 +31,5 @@ target_link_libraries(${PROJECT_NAME}
     ${PCL_LIBRARIES}
     yaml-cpp
     ${CUDA_LIBRARIES}
+    OpenMP::OpenMP_CXX
 )

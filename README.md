@@ -79,6 +79,8 @@ git clone git@github.com:MengWoods/enhanced-RANSAC-ground-segmentation.git
 
 Edit the [`enhanced_ransac_ground_segmentation/config/config.yaml`](./enhanced_ransac_ground_segmentation/config/enhanced_ransac.yaml) file to set the `point_cloud_paths` to the correct directory where your KITTI sequence is located. You can also adjust filter parameters, RANSAC iterations, and other settings here.
 
+Update the absolute path to the configuration file in Line 5 of [compile.sh](./enhanced_ransac_ground_segmentation/compile.sh)
+
 
 ### 3. Run the Project
 

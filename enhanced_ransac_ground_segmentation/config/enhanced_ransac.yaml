@@ -20,8 +20,8 @@ result_path: "~/Documents/github/enhanced_RANSAC_ground_segmentation/results" # 
 point_cloud_loader:
   verbose: false      # Print debug information specific to the data loader.
   point_cloud_paths:  # List of paths to the KITTI velodyne_points/data directories.
-    - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
-    - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
+    # - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
+    # - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
   point_cloud_type: xyzi # Point format. Options: xyzi, xyz, xyi, xyzrgb
 
@@ -48,7 +48,6 @@ noise_filter:
   mean_k: 10          # Number of nearest neighbors to analyze for each point.
   std_dev: 2.0        # Standard deviation multiplier threshold. Points with a distance larger
                       # than this multiplier of the mean distance will be removed.
-  verbose: true       # Print debug information specific to the noise filter.
 
 # -------------------------------------------------------------------
 # CORE ALGORITHMS
@@ -65,12 +64,12 @@ ransac:
 ground_estimation:
   enable: true             # Master switch for the entire ground estimation process.
   verbose: true            # Print debug info for the ground estimation logic.
-  buffer_size: 50          # Number of recent valid planes to store for the moving average fallback.
+  buffer_size: 1           # Number of recent valid planes to store for the moving average fallback.
   max_angle: 20.0          # Max angle (degrees) between a plane's normal and the Z-axis to be
                            # considered a valid ground plane. Prevents walls/ramps from being chosen.
   max_height: 2.0          # Max height (meters) of the ground plane's 'd' coefficient.
   min_points: 30           # Minimum number of points required in the cloud for estimation to proceed.
-  z_offset: 0.1            # An offset (meters) to vertically adjust the final ground plane.
+  z_offset: 0.0            # An offset (meters) to vertically adjust the final ground plane.
 
   wall_filter:
     enable: false          # If true, attempts to detect and filter out vertical walls before re-running RANSAC.
