@@ -15,6 +15,7 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
 {
     // Load parameters from config
     enable_ = config["ground_estimation"]["enable"].as<bool>(true);
+    verbose_ = config["ground_estimation"]["verbose"].as<bool>(false);
     buffer_size_ = config["ground_estimation"]["buffer_size"].as<int>(10);
     max_angle_ = config["ground_estimation"]["max_angle"].as<float>(10.0f);
     max_height_ = config["ground_estimation"]["max_height"].as<float>(0.2f);
@@ -49,10 +50,8 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
 
 bool GroundEstimation::estimateGround(PointCloudPtr &cloud, std::vector<float> &plane_coeffs)
 {
-    if (!enable_)
-    {
-        return false;
-    }
+    if (!enable_) {return false;}
+
     if (cloud->size() < min_points_)
     {
         if (!getAverageFromBuffer(plane_coeffs))
@@ -97,6 +96,7 @@ bool GroundEstimation::estimateGround(PointCloudPtr &cloud, std::vector<float> &
     {
         plane_coeffs[3] -= plane_coeffs[2] * z_offset_;
         saveToBuffer(plane_coeffs);
+        getAverageFromBuffer(plane_coeffs);
     }
     else
     {
@@ -156,6 +156,14 @@ bool GroundEstimation::getAverageFromBuffer(std::vector<float> &plane_coeffs)
     {
         return false;
     }
+
+    if (verbose_ && buffer_.size() < buffer_size_)
+    {
+        std::cout << "\t[GroundEstimation] Warning: Buffer is not full ("
+                  << buffer_.size() << "/" << buffer_size_
+                  << "). Averaged result may be less stable." << std::endl;
+    }
+
     std::vector<float> avg(4, 0.0f);
     for (const auto &p : buffer_)
     {
@@ -168,6 +176,7 @@ bool GroundEstimation::getAverageFromBuffer(std::vector<float> &plane_coeffs)
     {
         v /= buffer_.size();
     }
+
     plane_coeffs = avg;
     return true;
 }

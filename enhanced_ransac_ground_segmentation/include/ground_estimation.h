@@ -70,6 +70,7 @@ private:
     void flipPlaneIfNecessary(std::vector<float> &plane_coeffs);
 
     bool enable_;                           ///< Enable or disable ground estimation
+    bool verbose_;                          ///< Enable verbose output for debugging
     std::deque<std::vector<float>> buffer_; ///< Buffer storing recent ground plane estimates.
     int buffer_size_;           ///< Maximum size of the history buffer.
     float max_angle_;           ///< Maximum allowable ground plane angle.

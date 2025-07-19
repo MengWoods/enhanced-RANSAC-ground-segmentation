@@ -63,7 +63,6 @@ int main(int argc, char** argv)
 
     while (point_cloud_loader.loadNextPointCloud(cloud))
     {
-        std::cout << "\033[2J\033[H";
         // Init
         auto frame_start = std::chrono::steady_clock::now();
         if (timer) std::cout << "------------------- Frame -------------------" << std::endl;

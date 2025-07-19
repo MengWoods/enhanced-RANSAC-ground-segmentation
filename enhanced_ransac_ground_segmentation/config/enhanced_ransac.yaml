@@ -8,7 +8,7 @@
 # Global settings for the main application loop.
 
 verbose: false        # Enable/disable detailed console output for the main application.
-timer: true           # Enable/disable performance timers for each processing step.
+timer: false           # Enable/disable performance timers for each processing step.
 frequency: 15         # Target loop frequency in Hz. The program will pause to not exceed this rate.
 result_path: "~/Documents/github/enhanced_RANSAC_ground_segmentation/results" # Path to save any output files.
 
@@ -21,7 +21,7 @@ point_cloud_loader:
   verbose: false      # Print debug information specific to the data loader.
   point_cloud_paths:  # List of paths to the KITTI velodyne_points/data directories.
     # - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
-    # - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
+    - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
   point_cloud_type: xyzi # Point format. Options: xyzi, xyz, xyi, xyzrgb
 
@@ -64,7 +64,7 @@ ransac:
 ground_estimation:
   enable: true             # Master switch for the entire ground estimation process.
   verbose: true            # Print debug info for the ground estimation logic.
-  buffer_size: 1           # Number of recent valid planes to store for the moving average fallback.
+  buffer_size: 20          # Number of recent valid planes to store for the moving average fallback.
   max_angle: 20.0          # Max angle (degrees) between a plane's normal and the Z-axis to be
                            # considered a valid ground plane. Prevents walls/ramps from being chosen.
   max_height: 2.0          # Max height (meters) of the ground plane's 'd' coefficient.
