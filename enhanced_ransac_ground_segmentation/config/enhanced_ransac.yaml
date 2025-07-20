@@ -10,7 +10,6 @@
 verbose: false        # Enable/disable detailed console output for the main application.
 timer: true           # Enable/disable performance timers for each processing step.
 frequency: 15         # Target loop frequency in Hz. The program will pause to not exceed this rate.
-result_path: "~/Documents/github/enhanced_RANSAC_ground_segmentation/results" # Path to save any output files.
 
 # -------------------------------------------------------------------
 # DATA LOADER SETTINGS
@@ -20,8 +19,8 @@ result_path: "~/Documents/github/enhanced_RANSAC_ground_segmentation/results" # 
 point_cloud_loader:
   verbose: false      # Print debug information specific to the data loader.
   point_cloud_paths:  # List of paths to the KITTI velodyne_points/data directories.
-    # - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
-    # - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
+    - /home/mh/Documents/kitti/2011_09_26_drive_0101_sync/2011_09_26/2011_09_26_drive_0101_sync/velodyne_points/data
+    - /home/mh/Documents/kitti/2011_09_29_drive_0071_sync/2011_09_29/2011_09_29_drive_0071_sync/velodyne_points/data
     - /home/mh/Documents/kitti/2011_09_30_drive_0033_sync/2011_09_30/2011_09_30_drive_0033_sync/velodyne_points/data
   point_cloud_type: xyzi # Point format. Options: xyzi, xyz, xyi, xyzrgb
 
@@ -34,8 +33,8 @@ box_filter:
   enable: true       # If true, keeps only points within the defined XYZ box.
   xmin: -10.0         # Minimum X coordinate (meters).
   xmax: 10.0          # Maximum X coordinate (meters).
-  ymin: -10.0         # Minimum Y coordinate (meters).
-  ymax: 10.0          # Maximum Y coordinate (meters).
+  ymin: -6.0         # Minimum Y coordinate (meters).
+  ymax: 6.0          # Maximum Y coordinate (meters).
   zmin: -3.0          # Minimum Z coordinate (meters).
   zmax: 1.0           # Maximum Z coordinate (meters).
 
@@ -44,7 +43,7 @@ voxel_filter:
   voxel_size: 0.30    # The size of each voxel in meters. Larger values reduce points more.
 
 noise_filter:
-  enable: true        # If true, removes points considered to be statistical outliers.
+  enable: false        # If true, removes points considered to be statistical outliers.
   mean_k: 10          # Number of nearest neighbors to analyze for each point.
   std_dev: 2.0        # Standard deviation multiplier threshold. Points with a distance larger
                       # than this multiplier of the mean distance will be removed.
@@ -64,12 +63,25 @@ ransac:
 ground_estimation:
   enable: true             # Master switch for the entire ground estimation process.
   verbose: true            # Print debug info for the ground estimation logic.
-  buffer_size: 1           # Number of recent valid planes to store for the moving average fallback.
   max_angle: 20.0          # Max angle (degrees) between a plane's normal and the Z-axis to be
                            # considered a valid ground plane. Prevents walls/ramps from being chosen.
   max_height: 2.0          # Max height (meters) of the ground plane's 'd' coefficient.
   min_points: 30           # Minimum number of points required in the cloud for estimation to proceed.
-  z_offset: 0.0            # An offset (meters) to vertically adjust the final ground plane.
+  z_offset: 0.15            # An offset (meters) to vertically adjust the final ground plane.
+
+  temporal_filter:
+    enable: true            # If true, applies a temporal filter to stabilize the ground plane estimate.
+    method: "kalman_filter" # moving_average | kalman_filter
+    moving_average:
+      buffer_size: 10           # Number of recent planes to average for stability.
+    kalman_filter:
+      # process_noise / measurement_noise: high value more responsive to changes, low value more stable.
+      # High value will adapt to changes quickly, low value will be more stable.
+      process_noise: 0.8       # Process noise covariance for the Kalman filter.
+      # High value increases smoothness, low value allows more noise.
+      measurement_noise: 0.1    # Measurement noise covariance for the Kalman filter.
+      # High value means the fitler starts with very low confidence in the initial state.
+      initial_covariance: 2.0   # Initial covariance for the Kalman filter.
 
   wall_filter:
     enable: false          # If true, attempts to detect and filter out vertical walls before re-running RANSAC.

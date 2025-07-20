@@ -47,8 +47,8 @@ int main(int argc, char** argv)
     std::cout << "visualization: " << (visualization ? "true" : "false") << std::endl;
     std::cout << "ground_estimation: " << (ground_estimation ? "true" : "false") << std::endl;
 
-    std::cout << "Waiting for 5 seconds before starting..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::cout << "Waiting for 3 seconds before starting..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // Initialize components
     PointCloudLoader point_cloud_loader(config);
@@ -63,7 +63,6 @@ int main(int argc, char** argv)
 
     while (point_cloud_loader.loadNextPointCloud(cloud))
     {
-        std::cout << "\033[2J\033[H";
         // Init
         auto frame_start = std::chrono::steady_clock::now();
         if (timer) std::cout << "------------------- Frame -------------------" << std::endl;
