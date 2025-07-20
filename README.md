@@ -12,7 +12,7 @@ The core of the project is a highly optimized RANSAC-based plane estimator that 
 
 The full video below showcases the algorithm's performance on three distinct scenes from the KITTI dataset, demonstrating its stability and accuracy in highway, city, and residential environments.
 
-[![RANSAC Ground Segmentation V2 Demo](https://img.youtube.com/vi/Z5uDPQNM0xA/1.jpg)](https://www.youtube.com/watch?v=Z5uDPQNM0xA)
+[![RANSAC Ground Segmentation Demo](https://img.youtube.com/vi/Z5uDPQNM0xA/1.jpg)](https://youtu.be/ztGHr44cB_Y)
 *(Click the image to watch on YouTube)*
 
 ## Key Features
@@ -94,13 +94,13 @@ bash compile.sh
 ## Project Roadmap (TODO)
 
 This project is under active development. Future enhancements include:
-- [ ] Performance: Accelerate noise filters using OpenMP.
+- [x] Performance: Accelerate noise filters using OpenMP.
 - [ ] Segmentation Logic:
   - [ ] Add a third category for "negative" points (below the ground plane).
-  - [ ] Improve handling of corner cases: empty point clouds, fully occluded views, and steep slopes.
-  - [ ] Mitigate the effect of vertical walls on plane estimation.
-- [ ] Estimation Algorithm:
-  - [ ] Implement a predictive filter (e.g., Kalman Filter) for plane coefficients to improve temporal stability.
+  - [x] Improve handling of corner cases: empty point clouds, fully occluded views, and steep slopes.
+  - [x] Mitigate the effect of vertical walls on plane estimation.
+- [x] Estimation Algorithm:
+  - [x] Implement a predictive filter (e.g., Kalman Filter) for plane coefficients to improve temporal stability.
 - [ ] Advanced Features:
   - [ ] Introduce a probability model where points closer to the sensor have a higher weight in the estimation.
   - [ ] Visualize this probability.
