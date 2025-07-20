@@ -47,8 +47,8 @@ int main(int argc, char** argv)
     std::cout << "visualization: " << (visualization ? "true" : "false") << std::endl;
     std::cout << "ground_estimation: " << (ground_estimation ? "true" : "false") << std::endl;
 
-    std::cout << "Waiting for 5 seconds before starting..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::cout << "Waiting for 3 seconds before starting..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // Initialize components
     PointCloudLoader point_cloud_loader(config);

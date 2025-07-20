@@ -16,14 +16,35 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
     // Load parameters from config
     enable_ = config["ground_estimation"]["enable"].as<bool>(true);
     verbose_ = config["ground_estimation"]["verbose"].as<bool>(false);
-    buffer_size_ = config["ground_estimation"]["buffer_size"].as<int>(10);
     max_angle_ = config["ground_estimation"]["max_angle"].as<float>(10.0f);
     max_height_ = config["ground_estimation"]["max_height"].as<float>(0.2f);
     min_points_ = config["ground_estimation"]["min_points"].as<int>(50);
     z_offset_ = config["ground_estimation"]["z_offset"].as<float>(0.1f);
+    temporal_filter_enabled_ = config["ground_estimation"]["temporal_filter"]["enable"].as<bool>(true);
     wall_filter_enabled_ = config["ground_estimation"]["wall_filter"]["enable"].as<bool>(true);
     max_rerun_times_ = config["ground_estimation"]["wall_filter"]["max_rerun_times"].as<int>(3);
     wall_threshold_ = config["ground_estimation"]["wall_filter"]["threshold"].as<float>(0.2f);
+
+    if (temporal_filter_enabled_)
+    {
+        temporal_filter_method_ = config["ground_estimation"]["temporal_filter"]["method"].as<std::string>("kalman_filter");
+        if (temporal_filter_method_ == "moving_average")
+        {
+            buffer_size_ = config["ground_estimation"]["temporal_filter"]["moving_average"]["buffer_size"].as<int>(10);
+        }
+        else if (temporal_filter_method_ == "kalman_filter")
+        {
+            kalman_filter_ = std::make_unique<KalmanFilter>();
+            kalman_process_noise_ = config["ground_estimation"]["temporal_filter"]["kalman_filter"]["process_noise"].as<double>(0.01);
+            kalman_measurement_noise_ = config["ground_estimation"]["temporal_filter"]["kalman_filter"]["measurement_noise"].as<double>(0.1);
+            kalman_initial_covariance_ = config["ground_estimation"]["temporal_filter"]["kalman_filter"]["initial_covariance"].as<double>(1.0);
+            kalman_filter_->init({0.0f, 0.0f, 1.0f, 0.0f}, kalman_initial_covariance_, kalman_process_noise_, kalman_measurement_noise_);
+        }
+        else
+        {
+            throw std::runtime_error("Unknown temporal filter method: " + temporal_filter_method_);
+        }
+    }
 
     ransac_ = std::make_unique<Ransac>(config);
     wall_filter_ = std::make_unique<WallFilter>(wall_threshold_);
@@ -38,6 +59,8 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
         std::cout << "  - Max Height: " << max_height_ << " meters" << std::endl;
         std::cout << "  - Min Points: " << min_points_ << std::endl;
         std::cout << "  - Z Offset: " << z_offset_ << " meters" << std::endl;
+        std::cout << "  - Temporal Filter Enabled: " << (temporal_filter_enabled_ ? "true" : "false") << std::endl;
+        std::cout << "  - Temporal Filter Method: " << temporal_filter_method_ << std::endl;
         std::cout << "  - Wall Filter Enabled: " << (wall_filter_enabled_ ? "true" : "false") << std::endl;
         std::cout << "  - Max Rerun Times: " << max_rerun_times_ << std::endl;
         std::cout << "  - Wall Threshold: " << wall_threshold_ << std::endl;
@@ -50,62 +73,109 @@ GroundEstimation::GroundEstimation(const YAML::Node &config)
 
 bool GroundEstimation::estimateGround(PointCloudPtr &cloud, std::vector<float> &plane_coeffs)
 {
-    if (!enable_) {return false;}
+    if (!enable_) { return false; }
 
+    // --- Initial Check: Not enough points ---
     if (cloud->size() < min_points_)
     {
-        if (!getAverageFromBuffer(plane_coeffs))
+        // Fallback logic: Try to get a filtered estimate if the cloud is too small.
+        if (temporal_filter_method_ == "kalman_filter")
         {
-            std::cerr << "[GroundEstimation] Warning: Not enough points and no history available." << std::endl;
-            return false;
+            if (kalman_filter_->isInitialized())
+            {
+                plane_coeffs = kalman_filter_->getState();
+                return true;
+            }
         }
-        return true;
+        else // Default to moving_average
+        {
+            if (getAverageFromBuffer(plane_coeffs)) {
+                return true;
+            }
+        }
+
+        // If no filter is available, fail.
+        std::cerr << "[GroundEstimation] Warning: Not enough points and no history available." << std::endl;
+        return false;
     }
 
+    // --- RANSAC Estimation Loop ---
     int rerun_count = 0;
-    bool valid_ground = false;
+    bool valid_ransac_result = false;
+    std::vector<float> instant_coeffs; // Use a temporary vector for the raw RANSAC result
 
-    while (!valid_ground && rerun_count <= max_rerun_times_)
+    while (!valid_ransac_result && rerun_count <= max_rerun_times_)
     {
-        ransac_->estimatePlane(cloud, plane_coeffs);
+        ransac_->estimatePlane(cloud, instant_coeffs);
+        flipPlaneIfNecessary(instant_coeffs);
 
-        flipPlaneIfNecessary(plane_coeffs);
-
-        if (wall_filter_enabled_ && isWallLike(plane_coeffs))
+        if (wall_filter_enabled_ && isWallLike(instant_coeffs))
         {
-            wall_filter_->applyFilter(cloud, plane_coeffs);
+            wall_filter_->applyFilter(cloud, instant_coeffs);
             rerun_count++;
         }
         else
         {
-            valid_ground = true;
+            valid_ransac_result = true;
         }
     }
 
-    if (!valid_ground)
+    // --- Process the RANSAC Result ---
+    if (valid_ransac_result && isGroundValid(instant_coeffs))
     {
-        if (!getAverageFromBuffer(plane_coeffs))
+        // --- Case 1: RANSAC succeeded and the plane is valid ---
+        instant_coeffs[3] -= instant_coeffs[2] * z_offset_;
+
+        if (temporal_filter_method_ == "kalman_filter")
         {
-            std::cerr << "\t[GroundEstimation] Warning: Failed to estimate ground plane after "
-                      << rerun_count << " attempts and no history available." << std::endl;
-            return false;
+            if (!kalman_filter_->isInitialized())
+            {
+                // Initialize the filter with the first valid measurement
+                kalman_filter_->init(instant_coeffs, kalman_initial_covariance_, kalman_process_noise_, kalman_measurement_noise_);
+            }
+            else
+            {
+                // Predict the next state, then update with the new measurement
+                kalman_filter_->predict();
+                kalman_filter_->update(instant_coeffs);
+            }
+            plane_coeffs = kalman_filter_->getState();
         }
-    }
-
-    if (isGroundValid(plane_coeffs))
-    {
-        plane_coeffs[3] -= plane_coeffs[2] * z_offset_;
-        saveToBuffer(plane_coeffs);
-        getAverageFromBuffer(plane_coeffs);
+        else // Moving Average
+        {
+            saveToBuffer(instant_coeffs);
+            // plane_coeffs = instant_coeffs;
+            getAverageFromBuffer(plane_coeffs);
+        }
     }
     else
     {
-        if (!getAverageFromBuffer(plane_coeffs))
+        // --- Case 2: RANSAC failed or produced an invalid plane ---
+        // Fallback to the last known good estimate from the chosen filter.
+        if (temporal_filter_method_ == "kalman_filter")
         {
-            std::cerr << "\t[GroundEstimation] Warning: Estimated ground plane is invalid and no history available." << std::endl;
-            return false;
+            if (kalman_filter_->isInitialized())
+            {
+                // Predict the next state without an update to keep it smooth
+                kalman_filter_->predict();
+                plane_coeffs = kalman_filter_->getState();
+            }
+            else
+            {
+                std::cerr << "\t[GroundEstimation] Warning: RANSAC failed and Kalman filter is not initialized." << std::endl;
+                return false;
+            }
+        }
+        else // Moving Average
+        {
+            if (!getAverageFromBuffer(plane_coeffs))
+            {
+                std::cerr << "\t[GroundEstimation] Warning: RANSAC failed and buffer is empty." << std::endl;
+                return false;
+            }
         }
     }
+
     return true;
 }
 
@@ -159,7 +229,7 @@ bool GroundEstimation::getAverageFromBuffer(std::vector<float> &plane_coeffs)
 
     if (verbose_ && buffer_.size() < buffer_size_)
     {
-        std::cout << "\t[GroundEstimation] Warning: Buffer is not full ("
+        std::cout << "\t[GroundEstimation] Buffer is not full ("
                   << buffer_.size() << "/" << buffer_size_
                   << "). Averaged result may be less stable." << std::endl;
     }

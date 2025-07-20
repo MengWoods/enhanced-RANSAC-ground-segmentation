@@ -9,6 +9,7 @@
 
 #include "ransac.h"
 #include "wall_filter.h"
+#include "kalman_filter.h"
 
 #include <memory>
 #include <deque>
@@ -71,15 +72,26 @@ private:
 
     bool enable_;                           ///< Enable or disable ground estimation
     bool verbose_;                          ///< Enable verbose output for debugging
-    std::deque<std::vector<float>> buffer_; ///< Buffer storing recent ground plane estimates.
-    int buffer_size_;           ///< Maximum size of the history buffer.
+
     float max_angle_;           ///< Maximum allowable ground plane angle.
     float max_height_;          ///< Maximum allowable ground plane height.
     int min_points_;            ///< Minimum number of points required for estimation.
     float z_offset_;            ///< Offset to adjust the ground plane height, useful for fine-tuning.
+
     bool wall_filter_enabled_;  ///< Flag indicating if wall filtering is enabled.
     int max_rerun_times_;       ///< Maximum number of RANSAC retries for wall filtering.
     float wall_threshold_;      ///< Threshold for determining if a plane resembles a wall.
+
+    bool temporal_filter_enabled_; ///< Enable or disable temporal filtering (e.g., Kalman filter or moving average).
+    std::string temporal_filter_method_;    ///< Method for temporal filtering: "moving_average" or "kalman_filter".
+
+    std::deque<std::vector<float>> buffer_; ///< Buffer storing recent ground plane estimates.
+    int buffer_size_;           ///< Maximum size of the history buffer.
+
+    std::unique_ptr<KalmanFilter> kalman_filter_; ///< Kalman filter for temporal stability.
+    double kalman_process_noise_;      ///< Process noise for the Kalman filter.
+    double kalman_measurement_noise_;  ///< Measurement noise for the Kalman filter.
+    double kalman_initial_covariance_; ///< Initial covariance for the Kalman filter.
 
     std::unique_ptr<Ransac> ransac_;            ///< RANSAC-based plane estimation.
     std::unique_ptr<WallFilter> wall_filter_;   ///< Wall filter for refining the ground estimate.
