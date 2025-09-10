@@ -58,7 +58,7 @@ ransac:
   max_iterations: 400      # Number of random samples to draw. Higher values increase the chance
                            # of finding the optimal plane but increase computation time.
   min_points: 40           # Minimum number of points required for the RANSAC algorithm to run.
-  timer: false             # Enable/disable a specific timer for just the RANSAC function.
+  timer: true             # Enable/disable a specific timer for just the RANSAC function.
 
 ground_estimation:
   enable: true             # Master switch for the entire ground estimation process.

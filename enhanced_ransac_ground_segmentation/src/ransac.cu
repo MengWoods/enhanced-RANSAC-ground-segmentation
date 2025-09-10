@@ -9,21 +9,17 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <cmath>
+#include "ransac.h"
+#include "constant.h"
 
-#define THREADS_PER_BLOCK 256
-
-using Point = pcl::PointXYZI;
-using PointCloud = pcl::PointCloud<pcl::PointXYZI>;
-using PointCloudPtr = pcl::PointCloud<pcl::PointXYZI>::Ptr;
 
 /**
  * @brief Kernel to compute RANSAC plane fitting in parallel.
- * It uses a single block where threads collaborate.
  */
 __global__ void ransacParallelKernel(const Point *points, int num_points, int max_iterations,
                                      float distance_threshold, float *best_plane_out)
 {
-    // Best model found so far, stored in shared memory, visible to all threads in the block.
+    // Stored in shared memory, visible to all threads in the block.
     __shared__ float best_model[4];
     __shared__ int best_inlier_count;
 
@@ -97,6 +93,7 @@ __global__ void ransacParallelKernel(const Point *points, int num_points, int ma
         // Step 2: Parallel Inlier Counting
         // Each thread counts inliers for its subset of the data.
         int local_inlier_count = 0;
+        // Each thread processes a slice of the point cloud, stride loop.
         for (int j = threadIdx.x; j < num_points; j += blockDim.x)
         {
             float dist = fabsf(current_model[0] * points[j].x +
@@ -151,15 +148,31 @@ __global__ void ransacParallelKernel(const Point *points, int num_points, int ma
 }
 
 /**
- * @brief Wrapper function to launch the parallel CUDA kernel.
+ * @brief Launches the GPU kernel to perform RANSAC plane fitting.
+ * @param d_points Device pointer to input points.
+ * @param num_points Number of points.
+ * @param max_iterations Maximum RANSAC iterations.
+ * @param distance_threshold Distance threshold for inliers.
+ * @param d_plane_coeffs Device pointer to output plane coefficients.
  */
 void ransacFitPlaneGPU(const Point *d_points, int num_points, int max_iterations,
                        float distance_threshold, float *d_plane_coeffs)
 {
     // Launch a SINGLE block of threads to work collaboratively.
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+
     ransacParallelKernel<<<1, THREADS_PER_BLOCK>>>(d_points, num_points, max_iterations,
                                                   distance_threshold, d_plane_coeffs);
 
     // Ensure the kernel is finished before the CPU proceeds, especially for timing.
     cudaDeviceSynchronize();
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    // Compute elapsed time (ms)
+    float elapsed_ms = 0.0f;
+    cudaEventElapsedTime(&elapsed_ms, start, stop);
+    std::cout << "[Ransac CUDA]   - GPU Kernel duration: " << elapsed_ms << " ms\n";
 }

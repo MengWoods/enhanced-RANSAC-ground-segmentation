@@ -6,7 +6,9 @@
  */
 #pragma once
 #include "constant.h"
+#include <cuda_runtime.h>
 
+#define THREADS_PER_BLOCK 256
 /**
  * @brief GPU-based RANSAC plane fitting.
  */

@@ -62,15 +62,24 @@ void Ransac::estimatePlane(const PointCloudPtr &cloud, std::vector<float> &plane
     }
 
     // Copy data to device
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+
     cudaMemcpy(d_points, cloud->points.data(), num_points * sizeof(Point), cudaMemcpyHostToDevice);
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    // Compute elapsed time (ms)
+    float elapsed_ms = 0.0f;
+    cudaEventElapsedTime(&elapsed_ms, start, stop);
 
     if (timer_)
     {
         cudaDeviceSynchronize(); // Wait for Host-to-Device copy
-        auto t1 = std::chrono::steady_clock::now();
         std::cout << "[Ransac]   - H2D Copy duration: "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(t1 - start_step).count() << " us\n";
-        start_step = t1;
+                  << elapsed_ms << " ms\n";
     }
 
     // Run RANSAC on GPU
@@ -80,21 +89,31 @@ void Ransac::estimatePlane(const PointCloudPtr &cloud, std::vector<float> &plane
     {
         cudaDeviceSynchronize(); // Wait for GPU kernel to finish
         auto t1 = std::chrono::steady_clock::now();
-        std::cout << "[Ransac]   - GPU Kernel duration: "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(t1 - start_step).count() << " us\n";
+        auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(t1 - start_step).count();
+        std::cout << "[Ransac]   - Call Kernel duration: "
+                << duration_us / 1000.0 << " ms\n";
         start_step = t1;
     }
 
     // Copy back results
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+
     plane_coeffs.resize(4);
     cudaMemcpy(plane_coeffs.data(), d_plane_coeffs, 4 * sizeof(float), cudaMemcpyDeviceToHost);
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    // Compute elapsed time (ms)
+    cudaEventElapsedTime(&elapsed_ms, start, stop);
 
     if (timer_)
     {
         cudaDeviceSynchronize(); // Wait for Device-to-Host copy
         auto t1 = std::chrono::steady_clock::now();
         std::cout << "[Ransac]   - D2H Copy duration: "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(t1 - start_step).count() << " us\n";
+                  << elapsed_ms << " ms\n";
     }
 
     // Free memory
